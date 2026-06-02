@@ -72,7 +72,7 @@ public abstract class HeatCapacityFitter {
         return results;
     }
 
-    public static void print(Map<LowTHeatCapacityModel, FitResult> fittedModels) {
+    public static void print(Map<? extends HeatCapacityModel, FitResult> fittedModels) {
         fittedModels.forEach((model, result) -> {
             System.out.println("==================================================");
             System.out.printf("MODEL: %s   [%%RMS Error: %.4f%%]%n", model.name(), result.pctRMS());

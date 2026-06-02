@@ -1,6 +1,6 @@
 package com.magicdeaks.heatcapacity;
 
-public enum LowTHeatCapacityModel {
+public enum LowTHeatCapacityModel implements HeatCapacityModel{
     // ==========================================
     // 1. BASE MODELS (No Schottky contributions)
     // ==========================================
