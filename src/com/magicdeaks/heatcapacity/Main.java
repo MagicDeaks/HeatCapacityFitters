@@ -1,5 +1,8 @@
 package com.magicdeaks.heatcapacity;
 
+import com.magicdeaks.heatcapacity.models.LowTHeatCapacityModel;
+import com.magicdeaks.heatcapacity.util.DataReader;
+
 import java.util.Map;
 
 public class Main {

@@ -1,4 +1,4 @@
-package com.magicdeaks.heatcapacity;
+package com.magicdeaks.heatcapacity.util;
 
 public abstract class MatrixMath {
     private static final double EPSILON = 1e-9;

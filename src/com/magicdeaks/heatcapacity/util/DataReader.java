@@ -1,4 +1,4 @@
-package com.magicdeaks.heatcapacity;
+package com.magicdeaks.heatcapacity.util;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

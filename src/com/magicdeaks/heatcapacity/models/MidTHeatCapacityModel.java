@@ -1,6 +1,6 @@
-package com.magicdeaks.heatcapacity;
+package com.magicdeaks.heatcapacity.models;
 
-public enum MidTHeatCapacityModel implements  HeatCapacityModel {
+public enum MidTHeatCapacityModel implements HeatCapacityModel {
     ORTHO_0(0),
     ORTHO_1(0, 1),
     ORTHO_2(0, 1, 2),

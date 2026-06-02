@@ -1,5 +1,9 @@
 package com.magicdeaks.heatcapacity;
 
+import com.magicdeaks.heatcapacity.models.HeatCapacityModel;
+import com.magicdeaks.heatcapacity.models.LowTHeatCapacityModel;
+import com.magicdeaks.heatcapacity.util.MatrixMath;
+
 import java.util.EnumMap;
 import java.util.Map;
 

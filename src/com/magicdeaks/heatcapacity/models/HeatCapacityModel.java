@@ -1,4 +1,4 @@
-package com.magicdeaks.heatcapacity;
+package com.magicdeaks.heatcapacity.models;
 
 public interface HeatCapacityModel {
     double[] getPowers();
