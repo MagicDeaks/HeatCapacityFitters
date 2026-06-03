@@ -1,5 +1,7 @@
 package com.magicdeaks.heatcapacity.util;
 
+import com.magicdeaks.heatcapacity.HeatCapacityData;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -216,24 +218,24 @@ public abstract class DataProcesser {
         return count == 0 ? 1 : count; // Default to 1 if no numbers were parsed
     }
 
-    public static double[] scaleHeatCapacity(double[] heatCapacities, double molecularWeight) {
-        double[] scaledHeatCapacities = new double[heatCapacities.length];
+    public static HeatCapacityData scaleHeatCapacity(HeatCapacityData data, double molecularWeight) {
+        double[] scaledHeatCapacities = new double[data.heatCapacities().length];
 
-        for (int i = 0; i < heatCapacities.length; i++) {
-            scaledHeatCapacities[i] = heatCapacities[i] / molecularWeight;
+        for (int i = 0; i < data.heatCapacities().length; i++) {
+            scaledHeatCapacities[i] = data.heatCapacities()[i] / molecularWeight;
         }
 
-        return scaledHeatCapacities;
+        return new HeatCapacityData(data.temperatures(), scaledHeatCapacities);
     }
 
-    public static double[][] subtractCopper(double[][] data, double massCopper) {
-        double[][] result = new double[2][data[0].length];
+    public static HeatCapacityData subtractCopper(HeatCapacityData data, double massCopper) {
+        double[] heatCapacities = new double[data.heatCapacities().length];
 
-        for (int i = 0; i < data[0].length; i++) {
-            result[1][i] = data[1][i] - copperHeatCapacity(data[0][i], massCopper);
+        for (int i = 0; i < data.heatCapacities().length; i++) {
+            heatCapacities[i] = data.heatCapacities()[i] - copperHeatCapacity(data.temperatures()[i], massCopper);
         }
 
-        return result;
+        return new HeatCapacityData(data.temperatures(), heatCapacities);
     }
 
     private static double copperHeatCapacity(double temperature, double massCopper) {

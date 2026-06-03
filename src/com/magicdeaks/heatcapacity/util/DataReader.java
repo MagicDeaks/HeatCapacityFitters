@@ -1,5 +1,7 @@
 package com.magicdeaks.heatcapacity.util;
 
+import com.magicdeaks.heatcapacity.HeatCapacityData;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -33,9 +35,6 @@ public abstract class DataReader {
 
             while ((line = br.readLine()) != null) {
                 String[] row = line.split(delimiter);
-                if (row.length > 2) {
-                    throw new IllegalArgumentException("Invalid data format");
-                }
 
                 if (i >= startRow) {
                     data[0][i - startRow] = Double.parseDouble(row[columns[0]]);
@@ -51,7 +50,7 @@ public abstract class DataReader {
         return data;
     }
 
-    public static double[][] readDAT(String fileName, boolean getRaw) {
+    public static HeatCapacityData readDAT(String fileName, boolean getRaw) {
         double[][] rawData = (getRaw) ? readCSV(fileName, new int[]{7, 13}, 15) : readCSV(fileName, new int[]{7, 9}, 15);
 
         if (rawData[0].length != rawData[1].length || rawData[0].length % 3 != 0) {
@@ -62,15 +61,15 @@ public abstract class DataReader {
 
         int scalingFactor = (getRaw) ? 1_000_000 : 1_000;
 
-        for (int i = 0; i < rawData[0].length; i++) {
+        for (int i = 0; i < rawData[0].length / 3; i++) {
             data[0][i] = (rawData[0][3 * i] + rawData[0][3 * i + 1] + rawData[0][3 * i + 2]) / 3 / scalingFactor;
             data[1][i] = (rawData[1][3 * i] + rawData[1][3 * i + 1] + rawData[1][3 * i + 2]) / 3 / scalingFactor;
         }
 
-        return data;
+        return new HeatCapacityData(data[0], data[1]);
     }
 
-    public static double[][] readDAT(String filename) {
+    public static HeatCapacityData readDAT(String filename) {
         return readDAT(filename, false);
     }
 }

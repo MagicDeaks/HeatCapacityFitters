@@ -12,11 +12,13 @@ public abstract class HeatCapacityFitter {
     /**
      * Performs a linear least-squares fit for all defined HeatCapacityModels.
      *
-     * @param temperatures   Array of temperature values (T)
-     * @param heatCapacities Array of measured heat capacity values (C)
+     * @param data The data in the form of HeatCapacityData
      * @return A map linking each physical model to its fitted coefficients.
      */
-    public static Map<LowTHeatCapacityModel, FitResult> lowTPolyFit(double[] temperatures, double[] heatCapacities) {
+    public static Map<LowTHeatCapacityModel, FitResult> lowTPolyFit(HeatCapacityData data) {
+        double[] temperatures = data.temperatures();
+        double[] heatCapacities = data.heatCapacities();
+
         int numPoints = temperatures.length;
 
         Map<LowTHeatCapacityModel, FitResult> results = new EnumMap<>(LowTHeatCapacityModel.class);
@@ -76,7 +78,10 @@ public abstract class HeatCapacityFitter {
         return results;
     }
 
-    public static double[] fitOrthogonalPolynomial(double[] temperatures, double[] heatCapacities, int startPower, int powerIncrement, int totalTerms) {
+    public static double[] fitOrthogonalPolynomial(HeatCapacityData data, int startPower, int powerIncrement, int totalTerms) {
+        double[] temperatures = data.temperatures();
+        double[] heatCapacities = data.heatCapacities();
+
         int numberOfPoints = temperatures.length;
 
         if (numberOfPoints != heatCapacities.length) {
