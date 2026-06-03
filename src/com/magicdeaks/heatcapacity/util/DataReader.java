@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 public abstract class DataReader {
     private static final Logger LOGGER = Logger.getLogger(DataReader.class.getName());
 
-    public static double[][] readCSV(String fileName) {
+    public static double[][] readCSV(String fileName, int[] columns, int startRow) {
         String line;
         String delimiter = ",";
         Path filePath = Paths.get(fileName);
@@ -26,17 +26,21 @@ public abstract class DataReader {
                 lineCount = (int) lines.count();
             }
 
-            data[0] = new double[lineCount];
-            data[1] = new double[lineCount];
+            data[0] = new double[lineCount - startRow];
+            data[1] = new double[lineCount - startRow];
 
             int i = 0;
 
             while ((line = br.readLine()) != null) {
                 String[] row = line.split(delimiter);
-                if (row.length > 2) { throw new IllegalArgumentException("Invalid data format"); }
+                if (row.length > 2) {
+                    throw new IllegalArgumentException("Invalid data format");
+                }
 
-                data[0][i] = Double.parseDouble(row[0]);
-                data[1][i] = Double.parseDouble(row[1]);
+                if (i >= startRow) {
+                    data[0][i - startRow] = Double.parseDouble(row[columns[0]]);
+                    data[1][i - startRow] = Double.parseDouble(row[columns[1]]);
+                }
 
                 i++;
             }
@@ -45,5 +49,28 @@ public abstract class DataReader {
         }
 
         return data;
+    }
+
+    public static double[][] readDAT(String fileName, boolean getRaw) {
+        double[][] rawData = (getRaw) ? readCSV(fileName, new int[]{7, 13}, 15) : readCSV(fileName, new int[]{7, 9}, 15);
+
+        if (rawData[0].length != rawData[1].length || rawData[0].length % 3 != 0) {
+            throw new IllegalArgumentException("Invalid data format");
+        }
+
+        double[][] data = new double[2][rawData[0].length / 3];
+
+        int scalingFactor = (getRaw) ? 1_000_000 : 1_000;
+
+        for (int i = 0; i < rawData[0].length; i++) {
+            data[0][i] = (rawData[0][3 * i] + rawData[0][3 * i + 1] + rawData[0][3 * i + 2]) / 3 / scalingFactor;
+            data[1][i] = (rawData[1][3 * i] + rawData[1][3 * i + 1] + rawData[1][3 * i + 2]) / 3 / scalingFactor;
+        }
+
+        return data;
+    }
+
+    public static double[][] readDAT(String filename) {
+        return readDAT(filename, false);
     }
 }

@@ -71,5 +71,7 @@ public enum LowTHeatCapacityModel implements HeatCapacityModel {
         this.powers = powers;
     }
 
-    public double[] getPowers() { return powers; }
+    public double[] getPowers() {
+        return powers;
+    }
 }
