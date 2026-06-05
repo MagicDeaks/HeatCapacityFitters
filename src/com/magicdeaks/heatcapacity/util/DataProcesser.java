@@ -1,7 +1,8 @@
 package com.magicdeaks.heatcapacity.util;
 
-import com.magicdeaks.heatcapacity.HeatCapacityData;
+import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
@@ -218,11 +219,12 @@ public abstract class DataProcesser {
         return count == 0 ? 1 : count; // Default to 1 if no numbers were parsed
     }
 
-    public static HeatCapacityData scaleHeatCapacity(HeatCapacityData data, double molecularWeight) {
+    public static HeatCapacityData scaleHeatCapacity(HeatCapacityData data, double mass, double molecularWeight) {
         double[] scaledHeatCapacities = new double[data.heatCapacities().length];
+        double moles = mass / molecularWeight / 1000;
 
         for (int i = 0; i < data.heatCapacities().length; i++) {
-            scaledHeatCapacities[i] = data.heatCapacities()[i] / molecularWeight;
+            scaledHeatCapacities[i] = data.heatCapacities()[i] / moles;
         }
 
         return new HeatCapacityData(data.temperatures(), scaledHeatCapacities);
@@ -239,7 +241,7 @@ public abstract class DataProcesser {
     }
 
     private static double copperHeatCapacity(double temperature, double massCopper) {
-        double molesCopper = massCopper / ATOMIC_WEIGHTS.get("Cu");
+        double molesCopper = massCopper / 1000 / ATOMIC_WEIGHTS.get("Cu");
         double heatCapacity;
 
         if (temperature < 40.5843) {

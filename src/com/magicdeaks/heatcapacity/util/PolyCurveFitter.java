@@ -1,13 +1,14 @@
-package com.magicdeaks.heatcapacity;
+package com.magicdeaks.heatcapacity.util;
 
+import com.magicdeaks.heatcapacity.records.FitResult;
+import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 import com.magicdeaks.heatcapacity.models.HeatCapacityModel;
 import com.magicdeaks.heatcapacity.models.LowTHeatCapacityModel;
-import com.magicdeaks.heatcapacity.util.MatrixMath;
 
 import java.util.EnumMap;
 import java.util.Map;
 
-public abstract class HeatCapacityFitter {
+public abstract class PolyCurveFitter {
 
     /**
      * Performs a linear least-squares fit for all defined HeatCapacityModels.

@@ -1,6 +1,6 @@
 package com.magicdeaks.heatcapacity.frames;
 
-import com.magicdeaks.heatcapacity.HeatCapacityData;
+import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 import com.magicdeaks.heatcapacity.util.DataProcesser;
 import com.magicdeaks.heatcapacity.util.DataReader;
 
@@ -27,6 +27,8 @@ public class MainFrame {
     private final Color colour5 = new Color(255, 255, 255);
 
     public HeatCapacityData data;
+    //TODO
+    public double mass = 10;
 
     public MainFrame() {
         initialize();
@@ -104,8 +106,8 @@ public class MainFrame {
             if (subtractCopper) {
                 data = DataProcesser.subtractCopper(data, getCopperInput());
             }
-
-            data = DataProcesser.scaleHeatCapacity(data, molecularWeight);
+            //TODO implements user input for mass
+            data = DataProcesser.scaleHeatCapacity(data, mass, molecularWeight);
         });
         bottomRightPanel.add(calculateCpButton, BorderLayout.NORTH);
 

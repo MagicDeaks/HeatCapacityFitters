@@ -1,6 +1,6 @@
 package com.magicdeaks.heatcapacity.util;
 
-import com.magicdeaks.heatcapacity.HeatCapacityData;
+import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -62,7 +62,7 @@ public abstract class DataReader {
         int scalingFactor = (getRaw) ? 1_000_000 : 1_000;
 
         for (int i = 0; i < rawData[0].length / 3; i++) {
-            data[0][i] = (rawData[0][3 * i] + rawData[0][3 * i + 1] + rawData[0][3 * i + 2]) / 3 / scalingFactor;
+            data[0][i] = (rawData[0][3 * i] + rawData[0][3 * i + 1] + rawData[0][3 * i + 2]) / 3;
             data[1][i] = (rawData[1][3 * i] + rawData[1][3 * i + 1] + rawData[1][3 * i + 2]) / 3 / scalingFactor;
         }
 
