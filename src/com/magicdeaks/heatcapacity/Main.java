@@ -7,7 +7,6 @@ import com.magicdeaks.heatcapacity.util.DataProcesser;
 import com.magicdeaks.heatcapacity.util.DataReader;
 import com.magicdeaks.heatcapacity.util.LmCurveFitter;
 
-import java.sql.SQLOutput;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.stream.IntStream;
@@ -26,7 +25,7 @@ public class Main {
                 CompositeSpecificHeatModel.SpecialFitModel.LATTICE_3,
                 CompositeSpecificHeatModel.SpecialFitModel.LATTICE_5,
                 CompositeSpecificHeatModel.SpecialFitModel.LATTICE_7,
-                CompositeSpecificHeatModel.SpecialFitModel.GAP
+                CompositeSpecificHeatModel.SpecialFitModel.SCHOTTKY
         );
 
         HeatCapacityData data = DataProcesser.scaleHeatCapacity(DataProcesser.subtractCopper(DataReader.readDAT("data.dat"), 14.42), 9.38, 0.667 + DataProcesser.getMolecularWeight("SmOHCO3"));
@@ -46,7 +45,7 @@ public class Main {
         HeatCapacityData lowData = new HeatCapacityData(lowT, lowHC);
 
 
-        double[] initialParams = {0.000641, 0.000363, 0.000000713, -0.0000000015, 0.15, 3, 1.29};
+        double[] initialParams = {0.000641, 0.000363, 0.000000713, -0.0000000015, 0.15, 1, 1.29};
         boolean[] fixedParams = {false, false, false, false, false, true, false};
         double[] lowerBounds = {
                 0.0,

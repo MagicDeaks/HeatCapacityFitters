@@ -1,8 +1,8 @@
 package com.magicdeaks.heatcapacity.util;
 
+import com.magicdeaks.heatcapacity.models.ParametricModel;
 import com.magicdeaks.heatcapacity.records.FitResult;
 import com.magicdeaks.heatcapacity.records.HeatCapacityData;
-import com.magicdeaks.heatcapacity.models.ParametricModel;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresOptimizer.Optimum;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
@@ -10,8 +10,6 @@ import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer
 import org.apache.commons.math3.fitting.leastsquares.MultivariateJacobianFunction;
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.util.Pair;
-
-import java.util.Arrays;
 
 public abstract class LmCurveFitter {
 
@@ -36,22 +34,10 @@ public abstract class LmCurveFitter {
         final int finalNumFreeParams = count;
 
         if (finalNumFreeParams == 0) {
-            // 6. Calculate %RMS Goodness of Fit
-            double[] fittedY = model.value(xData, initialParams);
-            double sumSquaredResiduals = 0.0;
-            double sumY = 0.0;
+            // 6. Calculate Root Mean Square Percentage Error (RMSPE)
+            double rmspe = calculateRMS(model, initialParams, xData, yData);
 
-            for (int i = 0; i < yData.length; i++) {
-                double residual = yData[i] - fittedY[i];
-                sumSquaredResiduals += (residual * residual);
-                sumY += yData[i];
-            }
-
-            double meanY = sumY / yData.length;
-            double rmse = Math.sqrt(sumSquaredResiduals / yData.length);
-            double pctRMS = (meanY == 0) ? 0.0 : (rmse / Math.abs(meanY)) * 100.0;
-
-            return new FitResult(initialParams, pctRMS);
+            return new FitResult(initialParams, rmspe);
         }
 
         double[] freeInitialParams = new double[finalNumFreeParams];
@@ -111,11 +97,10 @@ public abstract class LmCurveFitter {
         };
 
         // DEBUG: Manually check the Jacobian before handing it to the optimizer
-        MultivariateJacobianFunction debugFunc = functionWrapper;
         RealVector initialGuessVector = new ArrayRealVector(freeInitialParams);
 
         try {
-            Pair<RealVector, RealMatrix> result = debugFunc.value(initialGuessVector);
+            Pair<RealVector, RealMatrix> result = functionWrapper.value(initialGuessVector);
             System.out.println("DEBUG: Jacobian evaluation successful.");
             System.out.println("DEBUG: Jacobian shape: " + result.getSecond().getRowDimension() +
                     "x" + result.getSecond().getColumnDimension());
@@ -175,7 +160,15 @@ public abstract class LmCurveFitter {
         }
 
         // 6. Calculate Root Mean Square Percentage Error (RMSPE)
-        double[] fittedY = model.value(xData, coefficients);
+        double rmspe = calculateRMS(model, coefficients, xData, yData);
+
+
+        // 7. Return the updated record
+        return new FitResult(coefficients, rmspe, iterations);
+    }
+
+    private static double calculateRMS(ParametricModel model, double[] params, double[] xData, double[] yData) {
+        double[] fittedY = model.value(xData, params);
         double sumSquaredPercentageErrors = 0.0;
 
         for (int i = 0; i < yData.length; i++) {
@@ -186,10 +179,6 @@ public abstract class LmCurveFitter {
             }
         }
 
-        double rmspe = Math.sqrt(sumSquaredPercentageErrors / yData.length) * 100.0;
-
-
-        // 7. Return the updated record
-        return new FitResult(coefficients, rmspe, iterations);
+        return Math.sqrt(sumSquaredPercentageErrors / yData.length) * 100.0;
     }
 }

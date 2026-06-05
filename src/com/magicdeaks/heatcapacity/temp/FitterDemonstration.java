@@ -1,8 +1,8 @@
 package com.magicdeaks.heatcapacity.temp;
 
+import com.magicdeaks.heatcapacity.models.CompositeSpecificHeatModel;
 import com.magicdeaks.heatcapacity.records.FitResult;
 import com.magicdeaks.heatcapacity.records.HeatCapacityData;
-import com.magicdeaks.heatcapacity.models.CompositeSpecificHeatModel;
 import com.magicdeaks.heatcapacity.util.LmCurveFitter;
 
 import java.util.Arrays;
