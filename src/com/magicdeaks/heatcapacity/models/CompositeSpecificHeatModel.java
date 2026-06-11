@@ -11,8 +11,8 @@ public class CompositeSpecificHeatModel implements ParametricModel {
         GAP, SCHOTTKY, UPTURN_2, UPTURN_3, UPTURN_4
     }
 
-    private final List<ModelTerm> terms = new ArrayList<>();
-    private final int totalParameters;
+    private final List<ModelTerm> TERMS = new ArrayList<>();
+    private final int TOTAL_PARAMETERS;
 
     /**
      * Constructor that accepts a variable number of SpecialFitModel enums.
@@ -22,27 +22,27 @@ public class CompositeSpecificHeatModel implements ParametricModel {
         int paramCount = 0;
         for (SpecialFitModel model : models) {
             ModelTerm term = createTerm(model, paramCount);
-            terms.add(term);
+            TERMS.add(term);
             paramCount += term.getParameterCount();
         }
-        this.totalParameters = paramCount;
+        this.TOTAL_PARAMETERS = paramCount;
     }
 
     public int getTotalParameters() {
-        return totalParameters;
+        return TOTAL_PARAMETERS;
     }
 
     @Override
     public double[] value(double[] tData, double[] parameters) {
-        if (parameters.length != totalParameters) {
-            throw new IllegalArgumentException("Expected " + totalParameters + " parameters, got " + parameters.length);
+        if (parameters.length != TOTAL_PARAMETERS) {
+            throw new IllegalArgumentException("Expected " + TOTAL_PARAMETERS + " parameters, got " + parameters.length);
         }
 
         double[] yValues = new double[tData.length];
         for (int i = 0; i < tData.length; i++) {
             double t = tData[i];
             double cTotal = 0.0;
-            for (ModelTerm term : terms) {
+            for (ModelTerm term : TERMS) {
                 cTotal += term.evaluate(t, parameters);
             }
             yValues[i] = cTotal;
@@ -52,11 +52,11 @@ public class CompositeSpecificHeatModel implements ParametricModel {
 
     @Override
     public double[][] jacobian(double[] tData, double[] parameters) {
-        double[][] jacobianMatrix = new double[tData.length][totalParameters];
+        double[][] jacobianMatrix = new double[tData.length][TOTAL_PARAMETERS];
 
         for (int i = 0; i < tData.length; i++) {
             double t = tData[i];
-            for (ModelTerm term : terms) {
+            for (ModelTerm term : TERMS) {
                 term.addJacobianDerivatives(t, parameters, jacobianMatrix[i]);
             }
         }
@@ -98,23 +98,23 @@ public class CompositeSpecificHeatModel implements ParametricModel {
 
     // 1-Parameter Polynomial: C = p * T^power
     private static class PolynomialTerm extends ModelTerm {
-        private final double power;
+        private final double POWER;
 
         public PolynomialTerm(int offset, double power) {
             super(offset);
-            this.power = power;
+            this.POWER = power;
         }
 
         @Override int getParameterCount() { return 1; }
 
         @Override
         double evaluate(double t, double[] params) {
-            return params[paramOffset] * Math.pow(t, power);
+            return params[paramOffset] * Math.pow(t, POWER);
         }
 
         @Override
         void addJacobianDerivatives(double t, double[] params, double[] jacobianRow) {
-            jacobianRow[paramOffset] = Math.pow(t, power); // dC/dp
+            jacobianRow[paramOffset] = Math.pow(t, POWER); // dC/dp
         }
     }
 
