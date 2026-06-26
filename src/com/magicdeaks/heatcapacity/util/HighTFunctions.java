@@ -12,10 +12,13 @@ public abstract class HighTFunctions {
         return Math.pow(x, 4) * expMinus / ((1 - expMinus) * (1 - expMinus));
     }
 
-    public static double simpsonsApprox(Function<Double, Double> integrand, double a, double b, int intervals) {
-        if (intervals <= 0 || intervals % 2 != 0) {
-            throw new IllegalArgumentException("intervals must be a positive even integer");
+    public static double simpsonsApprox(Function<Double, Double> integrand, double a, double b, double h) {
+        if (h <= 0) {
+            throw new IllegalArgumentException("Step size must be positive");
         }
+
+        int baseIntervals = (int) Math.round((b - a) / (2.0 * h));
+        int intervals = Math.max(10, baseIntervals) * 2;
 
         double deltaX = (b - a) / intervals;
         double sum = 0;
@@ -35,9 +38,9 @@ public abstract class HighTFunctions {
         return sum * deltaX / 3;
     }
 
-    public static double calculateDebye(double debyeTemp, double temp, int intervals) {
+    public static double calculateDebye(double debyeTemp, double temp, double h) {
         double coefficient = 9 * 8.314472 * temp * temp * temp / (debyeTemp * debyeTemp * debyeTemp);
-        double integral = simpsonsApprox(HighTFunctions::debyeIntegrand, 0, debyeTemp / temp, intervals);
+        double integral = simpsonsApprox(HighTFunctions::debyeIntegrand, 0, debyeTemp / temp, h);
 
         return coefficient * integral;
     }

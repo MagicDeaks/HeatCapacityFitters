@@ -12,6 +12,9 @@ public class AnalysisSession {
     private FitResult midTFit;
     private FitResult highTFit;
 
+    private double atoms;
+    private double molecularWeight;
+
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
     public void removePropertyChangeListener(PropertyChangeListener listener) {
@@ -24,6 +27,28 @@ public class AnalysisSession {
 
     public HeatCapacityData getRawData() {
         return rawData;
+    }
+
+    public double getAtoms() {
+        return atoms;
+    }
+
+    public double getMolecularWeight() {
+        return molecularWeight;
+    }
+
+    public void setAtoms(double atoms) {
+        double oldAtoms = this.atoms;
+        this.atoms = atoms;
+
+        support.firePropertyChange("atoms", oldAtoms, atoms);
+    }
+
+    public void setMolecularWeight(double molecularWeight) {
+        double oldMolecularWeight = this.molecularWeight;
+        this.molecularWeight = molecularWeight;
+
+        support.firePropertyChange("molecularWeight", oldMolecularWeight, molecularWeight);
     }
 
     public void setRawData(HeatCapacityData rawData) {

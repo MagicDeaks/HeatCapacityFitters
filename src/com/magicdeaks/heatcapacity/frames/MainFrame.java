@@ -2,6 +2,7 @@ package com.magicdeaks.heatcapacity.frames;
 
 import com.magicdeaks.heatcapacity.session.AnalysisSession;
 import com.magicdeaks.heatcapacity.tabs.DataImportTab;
+import com.magicdeaks.heatcapacity.tabs.HighTFitTab;
 import com.magicdeaks.heatcapacity.tabs.LowTFitTab;
 
 import javax.swing.*;
@@ -33,8 +34,7 @@ public class MainFrame {
         midTTab.add(new JLabel("Mid Temperature Fitting"));
         tabbedPane.addTab("Mid T", midTTab);
 
-        JPanel highTTab = new JPanel();
-        highTTab.add(new JLabel("High Temperature Fitting"));
+        JPanel highTTab = new HighTFitTab(session);
         tabbedPane.addTab("High T", highTTab);
 
         JPanel thermCalcTab = new JPanel();

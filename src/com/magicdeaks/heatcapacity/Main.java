@@ -1,20 +1,8 @@
 package com.magicdeaks.heatcapacity;
 
 import com.magicdeaks.heatcapacity.frames.MainFrame;
-import com.magicdeaks.heatcapacity.models.CompositeSpecificHeatModel;
-import com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel;
-import com.magicdeaks.heatcapacity.records.FitResult;
-import com.magicdeaks.heatcapacity.records.HeatCapacityData;
-import com.magicdeaks.heatcapacity.util.DataProcesser;
-import com.magicdeaks.heatcapacity.util.DataReader;
-import com.magicdeaks.heatcapacity.util.LmCurveFitter;
 
 import javax.swing.*;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.stream.IntStream;
-
-import static java.lang.System.nanoTime;
 
 public class Main {
     static void main() {

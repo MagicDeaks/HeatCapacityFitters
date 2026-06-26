@@ -11,7 +11,6 @@ import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.io.File;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 public class DataImportTab extends JPanel {
     private final AnalysisSession SESSION;
@@ -23,9 +22,12 @@ public class DataImportTab extends JPanel {
     private JTextField formulaField;
     private JTextField massField;
     private JTextField copperMassField;
+    private JTextField atomsField;
     private JCheckBox copperCheckBox;
     private JButton calculateCpButton;
     private JLabel statusLabel;
+
+    private double molecularWeight;
 
     private boolean subtractCopper = true;
 
@@ -73,6 +75,11 @@ public class DataImportTab extends JPanel {
         formulaField = new JTextField(15);
         gbc.gridx = 1;
         add(formulaField, gbc);
+
+        gbc.gridx = 2;
+        atomsField = new JTextField(5);
+        atomsField.setToolTipText("Enter Atoms per Formula Unit");
+        add(atomsField, gbc);
 
         gbc.gridx = 0;
         gbc.gridy = 2;
@@ -129,11 +136,12 @@ public class DataImportTab extends JPanel {
         final double SAMPLE_MASS = getDoubleFromField(massField, 10.0);
         final double COPPER_MASS = getDoubleFromField(copperMassField, 0.0);
         final boolean COPPER_SUB = subtractCopper;
+        final double ATOMS = getDoubleFromField(atomsField, 0.0);
 
         SwingWorker<HeatCapacityData, Void> worker = new SwingWorker<>() {
             @Override
             protected HeatCapacityData doInBackground() throws Exception {
-                double molecularWeight = DataProcesser.getMolecularWeight(FORMULA);
+                molecularWeight = DataProcesser.getMolecularWeight(FORMULA);
 
                 HeatCapacityData parsedData = DataReader.readDAT(selectedDataFile.getAbsolutePath());
 
@@ -150,6 +158,8 @@ public class DataImportTab extends JPanel {
                     HeatCapacityData finalData = get();
 
                     SESSION.setRawData(finalData);
+                    SESSION.setAtoms(ATOMS);
+                    SESSION.setMolecularWeight(molecularWeight);
 
                     statusLabel.setText("Status: Data loaded successfully! (" + finalData.temperatures().length + " points)");
                 } catch (Exception e) {

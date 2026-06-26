@@ -8,7 +8,8 @@ import java.util.List;
 import static com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel.HighTFitModel.*;
 
 public class HighTSpecificHeatModel implements ParametricModel{
-    public static int intervals = 6;
+    private static final double h = 0.2;
+
 
     public enum HighTFitModel {
         LINEAR, SQUARE, DEBYE, EINSTEIN
@@ -132,7 +133,7 @@ public class HighTSpecificHeatModel implements ParametricModel{
             double n = params[paramOffset];
             double theta = params[paramOffset + 1];
 
-            return n * HighTFunctions.calculateDebye(theta, t, intervals);
+            return n * HighTFunctions.calculateDebye(theta, t, h);
         }
 
         @Override
@@ -142,7 +143,7 @@ public class HighTSpecificHeatModel implements ParametricModel{
 
             double expMinus = Math.exp(-theta / t);
 
-            jacobianRow[paramOffset] = HighTFunctions.calculateDebye(theta, t, intervals);
+            jacobianRow[paramOffset] = HighTFunctions.calculateDebye(theta, t, h);
 
             jacobianRow[paramOffset + 1] = -3 / theta * jacobianRow[paramOffset];
 
