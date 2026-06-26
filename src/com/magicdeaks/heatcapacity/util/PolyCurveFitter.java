@@ -8,6 +8,8 @@ import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 import java.util.EnumMap;
 import java.util.Map;
 
+import static com.magicdeaks.heatcapacity.util.Deviations.calculateRMS;
+
 public abstract class PolyCurveFitter {
 
     /**
@@ -68,19 +70,7 @@ public abstract class PolyCurveFitter {
         return results;
     }
 
-    private static double calculateHeatCapacity(double[] coeff, double[] powers, double temperature) {
-        double heatCapacity = 0;
 
-        if (coeff.length != powers.length) {
-            throw new IllegalArgumentException("coeff and powers arrays must have same length");
-        }
-
-        for (int i = 0; i < powers.length; i++) {
-            heatCapacity += coeff[i] * Math.pow(temperature, powers[i]);
-        }
-
-        return heatCapacity;
-    }
 
     public static FitResult fitOrthogonalPolynomial(HeatCapacityData data, int startPower, int powerIncrement, int totalTerms) {
         double[] temperatures = data.temperatures();
@@ -225,20 +215,6 @@ public abstract class PolyCurveFitter {
         double pctRMS = calculateRMS(powers, finalStandardCoeffs, temperatures, heatCapacities);
 
         return new FitResult(finalStandardCoeffs, pctRMS);
-    }
-
-    private static double calculateRMS(double[] powers, double[] params, double[] xData, double[] yData) {
-        double sumSquaredPercentageErrors = 0;
-        for (int i = 0; i < yData.length; i++) {
-            // Prevent division by zero if a data point is exactly 0
-            if (yData[i] != 0) {
-                double fittedY = calculateHeatCapacity(params, powers, xData[i]);
-                double percentageError = (yData[i] - fittedY) / fittedY;
-                sumSquaredPercentageErrors += (percentageError * percentageError);
-            }
-        }
-
-        return Math.sqrt(sumSquaredPercentageErrors / yData.length) * 100.0;
     }
 
     public static void print(Map<? extends HeatCapacityModel, FitResult> fittedModels) {

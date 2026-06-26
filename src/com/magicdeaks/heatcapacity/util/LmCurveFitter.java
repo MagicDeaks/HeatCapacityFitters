@@ -11,6 +11,8 @@ import org.apache.commons.math3.fitting.leastsquares.MultivariateJacobianFunctio
 import org.apache.commons.math3.linear.*;
 import org.apache.commons.math3.util.Pair;
 
+import static com.magicdeaks.heatcapacity.util.Deviations.calculateRMS;
+
 public abstract class LmCurveFitter {
 
     public static FitResult fit(
@@ -106,7 +108,6 @@ public abstract class LmCurveFitter {
                     "x" + result.getSecond().getColumnDimension());
         } catch (Exception e) {
             System.err.println("DEBUG: Jacobian evaluation FAILED!");
-            e.printStackTrace();
         }
 
         // Create a weight matrix to minimize relative error
@@ -165,20 +166,5 @@ public abstract class LmCurveFitter {
 
         // 7. Return the updated record
         return new FitResult(coefficients, rmspe, iterations);
-    }
-
-    private static double calculateRMS(ParametricModel model, double[] params, double[] xData, double[] yData) {
-        double[] fittedY = model.value(xData, params);
-        double sumSquaredPercentageErrors = 0.0;
-
-        for (int i = 0; i < yData.length; i++) {
-            // Prevent division by zero if a data point is exactly 0
-            if (yData[i] != 0) {
-                double percentageError = (yData[i] - fittedY[i]) / fittedY[i];
-                sumSquaredPercentageErrors += (percentageError * percentageError);
-            }
-        }
-
-        return Math.sqrt(sumSquaredPercentageErrors / yData.length) * 100.0;
     }
 }

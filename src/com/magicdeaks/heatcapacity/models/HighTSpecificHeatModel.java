@@ -5,11 +5,32 @@ import com.magicdeaks.heatcapacity.util.HighTFunctions;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel.HighTFitModel.*;
+
 public class HighTSpecificHeatModel implements ParametricModel{
     public static int intervals = 6;
 
     public enum HighTFitModel {
         LINEAR, SQUARE, DEBYE, EINSTEIN
+    }
+
+    public enum StandardModels {
+        D_E_L_S(DEBYE, EINSTEIN, LINEAR, SQUARE),
+        D_E_L(DEBYE, EINSTEIN, LINEAR),
+        D_E_S(DEBYE, EINSTEIN, SQUARE),
+        D_E(DEBYE, EINSTEIN),
+        D_E_E(DEBYE, EINSTEIN, EINSTEIN),
+        D_D_E_E(DEBYE, DEBYE, EINSTEIN, EINSTEIN);
+
+        private final HighTFitModel[] models;
+
+        StandardModels(HighTFitModel... models) {
+            this.models = models;
+        }
+
+        public HighTFitModel[] getModels() {
+            return models;
+        }
     }
 
     private final List<ModelTerm> TERMS = new ArrayList<>();

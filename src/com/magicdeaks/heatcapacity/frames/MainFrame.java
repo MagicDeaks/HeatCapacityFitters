@@ -1,36 +1,19 @@
 package com.magicdeaks.heatcapacity.frames;
 
-import com.magicdeaks.heatcapacity.records.HeatCapacityData;
-import com.magicdeaks.heatcapacity.util.DataProcesser;
-import com.magicdeaks.heatcapacity.util.DataReader;
+import com.magicdeaks.heatcapacity.session.AnalysisSession;
+import com.magicdeaks.heatcapacity.tabs.DataImportTab;
+import com.magicdeaks.heatcapacity.tabs.LowTFitTab;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.util.Optional;
 
 public class MainFrame {
     private JFrame frame;
-    private JTextField copperMassField;
-    private JTextField formulaField;
-
-    private String copperInput;
-    private String formulaInput;
-
-    private boolean subtractCopper = true;
-
-    private final Color colour1 =  new Color(0, 0, 0);
-    private final Color colour2 = new Color(20, 33, 61);
-    private final Color colour3 = new Color(252, 163, 17);
-    private final Color colour4 = new Color(229, 229, 229);
-    private final Color colour5 = new Color(255, 255, 255);
-
-    public HeatCapacityData data;
-    //TODO
-    public double mass = 10;
+    private JTabbedPane tabbedPane;
+    private AnalysisSession session;
 
     public MainFrame() {
+        session = new AnalysisSession();
         initialize();
     }
 
@@ -38,86 +21,35 @@ public class MainFrame {
         frame = new JFrame();
         frame.setLayout(new BorderLayout());
 
-        JPanel centrePanel = new JPanel();
+        tabbedPane = new JTabbedPane();
 
-        JPanel rightPanel = new JPanel();
-        JPanel topRightPanel = new JPanel();
-        JPanel bottomRightPanel = new JPanel();
-        JPanel rightTopRightPanel = new JPanel();
-        JPanel leftTopRightPanel = new JPanel();
-        JPanel topLeftTopRightPanel = new JPanel();
-        JPanel bottomLeftTopRightPanel = new JPanel();
+        DataImportTab dataTab = new DataImportTab(session);
+        tabbedPane.addTab("Data Import", dataTab);
 
-        rightPanel.setLayout(new BorderLayout());
+        JPanel lowTTab = new LowTFitTab(session);
+        tabbedPane.addTab("Low T", lowTTab);
 
-        topRightPanel.setLayout(new BorderLayout());
-        bottomRightPanel.setLayout(new BorderLayout());
+        JPanel midTTab = new JPanel();
+        midTTab.add(new JLabel("Mid Temperature Fitting"));
+        tabbedPane.addTab("Mid T", midTTab);
 
-        rightTopRightPanel.setLayout(new BorderLayout());
-        leftTopRightPanel.setLayout(new BorderLayout());
+        JPanel highTTab = new JPanel();
+        highTTab.add(new JLabel("High Temperature Fitting"));
+        tabbedPane.addTab("High T", highTTab);
 
-        topLeftTopRightPanel.setLayout(new BorderLayout());
-        bottomLeftTopRightPanel.setLayout(new BorderLayout());
+        JPanel thermCalcTab = new JPanel();
+        thermCalcTab.add(new JLabel("Calculate Thermodynamic Functions"));
+        tabbedPane.addTab("Therm Calc", thermCalcTab);
 
+        JPanel resultsTab = new JPanel();
+        resultsTab.add(new JLabel("Results & Export"));
+        tabbedPane.addTab("Results", resultsTab);
 
-        rightPanel.add(topRightPanel, BorderLayout.NORTH);
-        rightPanel.add(bottomRightPanel, BorderLayout.SOUTH);
-
-        topRightPanel.add(rightTopRightPanel, BorderLayout.EAST);
-        topRightPanel.add(leftTopRightPanel, BorderLayout.WEST);
-
-        leftTopRightPanel.add(topLeftTopRightPanel, BorderLayout.NORTH);
-        leftTopRightPanel.add(bottomLeftTopRightPanel, BorderLayout.SOUTH);
-
-        centrePanel.setBackground(colour1);
-        rightPanel.setBackground(colour2);
-        topRightPanel.setBackground(colour3);
-        bottomRightPanel.setBackground(colour3);
-        rightTopRightPanel.setBackground(colour4);
-        leftTopRightPanel.setBackground(colour4);
-        topLeftTopRightPanel.setBackground(colour5);
-        bottomLeftTopRightPanel.setBackground(colour5);
-
-        copperMassField = new JTextField(10);
-        topLeftTopRightPanel.add(copperMassField, BorderLayout.NORTH);
-        ActionListener copperListener = _ -> {
-            copperInput = copperMassField.getText();
-            System.out.println(copperInput);
-        };
-        JButton copperButton = createButton("Copper (mg)", copperListener);
-        topLeftTopRightPanel.add(copperButton, BorderLayout.SOUTH);
-
-        formulaField = new JTextField(10);
-        rightTopRightPanel.add(formulaField, BorderLayout.NORTH);
-        ActionListener formulaListener = _ -> {
-            formulaInput = formulaField.getText();
-            System.out.println(formulaInput);
-        };
-        JButton formulaButton = createButton("Formula", formulaListener);
-        rightTopRightPanel.add(formulaButton, BorderLayout.SOUTH);
-
-        JCheckBox copperCheckBox = new JCheckBox("Copper Sub", true);
-        copperCheckBox.addItemListener(event -> subtractCopper = event.getStateChange() == ItemEvent.SELECTED);
-        bottomLeftTopRightPanel.add(copperCheckBox);
-
-        JButton calculateCpButton = createButton("Calculate CP", _ -> {
-            double molecularWeight = DataProcesser.getMolecularWeight(getFormulaInput().orElse(" "));
-            data = DataReader.readDAT("data.dat");
-            if (subtractCopper) {
-                data = DataProcesser.subtractCopper(data, getCopperInput());
-            }
-            //TODO implements user input for mass
-            data = DataProcesser.scaleHeatCapacity(data, mass, molecularWeight);
-        });
-        bottomRightPanel.add(calculateCpButton, BorderLayout.NORTH);
-
-        frame.add(rightPanel, BorderLayout.EAST);
-        frame.add(centrePanel, BorderLayout.CENTER);
+        frame.add(tabbedPane, BorderLayout.CENTER);
 
         frame.setTitle("Heat Capacity Fitter");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 600);
-        frame.setResizable(false);
+        frame.setSize(1000, 700);
         frame.setLocationRelativeTo(null);
     }
 
@@ -125,27 +57,18 @@ public class MainFrame {
         frame.setVisible(true);
     }
 
-    private JButton createButton(String name, ActionListener listener) {
-        JButton button = new JButton(name);
-        button.addActionListener(listener);
-        return button;
+    private JPanel createDataImportPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        // TODO: Add fields for masses, formula, and a calculate Cp function
+
+        panel.add(new JLabel("Data Loading Controls Will Go Here"));
+        return panel;
     }
 
-    private JButton createButton(String name, ImageIcon icon, ActionListener listener) {
-        JButton button = new JButton(name, icon);
-        button.addActionListener(listener);
-        return button;
-    }
+    private final Color colour1 =  new Color(0, 0, 0);
+    private final Color colour2 = new Color(20, 33, 61);
+    private final Color colour3 = new Color(252, 163, 17);
+    private final Color colour4 = new Color(229, 229, 229);
+    private final Color colour5 = new Color(255, 255, 255);
 
-    public double getCopperInput(){
-        try {
-            return Double.parseDouble(copperInput);
-        } catch (NumberFormatException | NullPointerException e) {
-            return 0.0;
-        }
-    }
-
-    public Optional<String> getFormulaInput(){
-        return Optional.ofNullable(formulaInput);
-    }
 }
