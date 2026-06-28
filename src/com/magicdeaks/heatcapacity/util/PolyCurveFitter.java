@@ -5,6 +5,7 @@ import com.magicdeaks.heatcapacity.models.LowTHeatCapacityModel;
 import com.magicdeaks.heatcapacity.records.FitResult;
 import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -70,8 +71,7 @@ public abstract class PolyCurveFitter {
         return results;
     }
 
-
-
+    // Don't even ask... Gemini wrote it, I am merely a vessel for the great AI overlords.
     public static FitResult fitOrthogonalPolynomial(HeatCapacityData data, int startPower, int powerIncrement, int totalTerms) {
         double[] temperatures = data.temperatures();
         double[] heatCapacities = data.heatCapacities();
@@ -93,23 +93,23 @@ public abstract class PolyCurveFitter {
             if (temperatures[i] > maxTemperature) maxTemperature = temperatures[i];
         }
 
-        double[] currentOrthoPoly = new double[numberOfPoints];
-        double[] prevOrthoPoly = new double[numberOfPoints];
-        double[] prevPrevOrthoPoly = new double[numberOfPoints];
-        double[] weightsSquared = new double[numberOfPoints];
-
-        for (int i = 0; i < numberOfPoints; i++) {
-            currentOrthoPoly[i] = Math.pow(temperatures[i], startPower);
-            double weight = 1.0 / heatCapacities[i];
-            weightsSquared[i] = weight * weight;
-        }
-
         double tempMidpoint = minTemperature + (maxTemperature - minTemperature) / 2.0;
         double tempScaleFactor = maxTemperature - tempMidpoint;
 
         double[] scaledTemperatures = new double[numberOfPoints];
         for (int i = 0; i < numberOfPoints; i++) {
             scaledTemperatures[i] = (temperatures[i] - tempMidpoint) / tempScaleFactor;
+        }
+
+        double[] currentOrthoPoly = new double[numberOfPoints];
+        double[] prevOrthoPoly = new double[numberOfPoints];
+        double[] prevPrevOrthoPoly = new double[numberOfPoints];
+        double[] weightsSquared = new double[numberOfPoints];
+
+        for (int i = 0; i < numberOfPoints; i++) {
+            currentOrthoPoly[i] = Math.pow(scaledTemperatures[i], startPower);
+            double weight = 1.0 / heatCapacities[i];
+            weightsSquared[i] = weight * weight;
         }
 
         int maxIterations = (int) Math.ceil((double) (totalTerms - startPower + powerIncrement) / powerIncrement) + 2;
@@ -133,7 +133,7 @@ public abstract class PolyCurveFitter {
 
             for (int i = 0; i < numberOfPoints; i++) {
                 if (currentIteration != 1) {
-                    currentOrthoPoly[i] = (Math.pow(temperatures[i], powerIncrement) - recurrenceAlpha) * prevOrthoPoly[i] - recurrenceBeta * prevPrevOrthoPoly[i];
+                    currentOrthoPoly[i] = (Math.pow(scaledTemperatures[i], powerIncrement) - recurrenceAlpha) * prevOrthoPoly[i] - recurrenceBeta * prevPrevOrthoPoly[i];
                 }
 
                 double polySq = currentOrthoPoly[i] * currentOrthoPoly[i];
@@ -206,15 +206,46 @@ public abstract class PolyCurveFitter {
                 binomialOffset++;
             }
         }
-
         double[] powers = new double[totalTerms];
         for (int i = 0; i < totalTerms; i++) {
             powers[i] = startPower + powerIncrement * i;
         }
 
-        double pctRMS = calculateRMS(powers, finalStandardCoeffs, temperatures, heatCapacities);
+        double pctRMS = calculateRMS(powers, Arrays.copyOf(finalStandardCoeffs, powers.length), temperatures, heatCapacities);
 
-        return new FitResult(finalStandardCoeffs, pctRMS);
+        return new FitResult(Arrays.copyOf(finalStandardCoeffs, powers.length), pctRMS);
+    }
+
+    /**
+     * Calculates heat capacity values from a given fit
+     *
+     * @param data The experimental data, containing the temperatures to be calculated at
+     * @param fit An array of pairs, with the first of each pair being the coefficient
+     *            and the second being the power of T
+     * @return An array of heat capacity values
+     */
+    public static double[] evaluatePolynomial(HeatCapacityData data, double[][] fit) {
+        double[] result = new double[data.temperatures().length];
+
+        for (int i = 0; i < data.temperatures().length; i++) {
+            for (double[] pair : fit) {
+                result[i] += pair[0] * Math.pow(data.temperatures()[i], pair[1]);
+            }
+        }
+
+        return result;
+    }
+
+    public static double[] evaluatePolynomial(double[] data, double[][] fit) {
+        double[] result = new double[data.length];
+
+        for (int i = 0; i < data.length; i++) {
+            for (double[] pair : fit) {
+                result[i] += pair[0] * Math.pow(data[i], pair[1]);
+            }
+        }
+
+        return result;
     }
 
     public static void print(Map<? extends HeatCapacityModel, FitResult> fittedModels) {

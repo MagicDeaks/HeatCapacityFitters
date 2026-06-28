@@ -9,7 +9,7 @@ import java.beans.PropertyChangeSupport;
 public class AnalysisSession {
     private HeatCapacityData rawData;
     private FitResult lowTFit;
-    private FitResult midTFit;
+    private FitResult[] midTFit;
     private FitResult highTFit;
 
     private double atoms;
@@ -65,8 +65,15 @@ public class AnalysisSession {
         support.firePropertyChange("lowTFit", oldFit, lowTFit);
     }
 
-    public void setMidTFit(FitResult midTFit) {
-        FitResult oldFit = this.midTFit;
+    public void setMidTFit(FitResult midTFit, int degree) {
+        FitResult[] oldFit = this.midTFit;
+        this.midTFit[degree] = midTFit;
+
+        support.firePropertyChange("midTFit", oldFit, midTFit);
+    }
+
+    public void setMidTFit(FitResult[] midTFit) {
+        FitResult[] oldFit = this.midTFit;
         this.midTFit = midTFit;
 
         support.firePropertyChange("midTFit", oldFit, midTFit);
@@ -83,7 +90,11 @@ public class AnalysisSession {
         return lowTFit;
     }
 
-    public FitResult getMidTFit() {
+    public FitResult getMidTFit(int degree) {
+        return midTFit[degree];
+    }
+
+    public FitResult[] getMidTFit() {
         return midTFit;
     }
 

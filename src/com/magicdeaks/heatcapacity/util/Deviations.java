@@ -3,6 +3,8 @@ package com.magicdeaks.heatcapacity.util;
 import com.magicdeaks.heatcapacity.models.ParametricModel;
 import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 
+import static com.magicdeaks.heatcapacity.util.PolyCurveFitter.evaluatePolynomial;
+
 public abstract class Deviations {
     public static double calculateRMS(ParametricModel model, double[] params, double[] xData, double[] yData) {
         double[] fittedY = model.value(xData, params);
@@ -15,7 +17,7 @@ public abstract class Deviations {
             }
         }
 
-        return Math.sqrt(sumSquaredPercentageErrors / yData.length) * 100.0;
+        return Math.sqrt(sumSquaredPercentageErrors / yData.length);
     }
 
     public static double calculateRMS(double[] powers, double[] params, double[] xData, double[] yData) {
@@ -28,7 +30,7 @@ public abstract class Deviations {
             }
         }
 
-        return Math.sqrt(sumSquaredPercentageErrors / yData.length) * 100.0;
+        return Math.sqrt(sumSquaredPercentageErrors / yData.length);
     }
 
     private static double calculateHeatCapacity(double[] coeff, double[] powers, double temperature) {
@@ -47,6 +49,24 @@ public abstract class Deviations {
 
     public static double[][] getDeviations(ParametricModel model, double[] params, HeatCapacityData data) {
         double[] fittedY = model.value(data.temperatures(), params);
+        double[] deviations = new double[fittedY.length];
+
+        for (int i = 0; i < deviations.length; i++) {
+            deviations[i] = (fittedY[i] - data.heatCapacities()[i]) / fittedY[i];
+        }
+
+        return new double[][]{ data.temperatures(), deviations };
+    }
+
+    public static double[][] getDeviations(int[] powers, double[] params, HeatCapacityData data) {
+        double[] fittedY = new double[data.temperatures().length];
+
+        for (int i = 0; i < data.temperatures().length; i++) {
+            for (int j = 0; j < powers.length; j++) {
+                fittedY[i] += params[j] * Math.pow(data.temperatures()[i], powers[j]);
+            }
+        }
+
         double[] deviations = new double[fittedY.length];
 
         for (int i = 0; i < deviations.length; i++) {

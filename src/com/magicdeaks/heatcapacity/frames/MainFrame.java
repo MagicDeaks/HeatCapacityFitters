@@ -4,6 +4,7 @@ import com.magicdeaks.heatcapacity.session.AnalysisSession;
 import com.magicdeaks.heatcapacity.tabs.DataImportTab;
 import com.magicdeaks.heatcapacity.tabs.HighTFitTab;
 import com.magicdeaks.heatcapacity.tabs.LowTFitTab;
+import com.magicdeaks.heatcapacity.tabs.MidTFitTab;
 
 import javax.swing.*;
 import java.awt.*;
@@ -30,8 +31,7 @@ public class MainFrame {
         JPanel lowTTab = new LowTFitTab(session);
         tabbedPane.addTab("Low T", lowTTab);
 
-        JPanel midTTab = new JPanel();
-        midTTab.add(new JLabel("Mid Temperature Fitting"));
+        JPanel midTTab = new MidTFitTab(session);
         tabbedPane.addTab("Mid T", midTTab);
 
         JPanel highTTab = new HighTFitTab(session);
@@ -55,14 +55,6 @@ public class MainFrame {
 
     public void show() {
         frame.setVisible(true);
-    }
-
-    private JPanel createDataImportPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        // TODO: Add fields for masses, formula, and a calculate Cp function
-
-        panel.add(new JLabel("Data Loading Controls Will Go Here"));
-        return panel;
     }
 
     private final Color colour1 =  new Color(0, 0, 0);
