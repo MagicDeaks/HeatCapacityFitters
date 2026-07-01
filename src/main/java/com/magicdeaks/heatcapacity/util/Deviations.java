@@ -3,8 +3,6 @@ package com.magicdeaks.heatcapacity.util;
 import com.magicdeaks.heatcapacity.models.ParametricModel;
 import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 
-import static com.magicdeaks.heatcapacity.util.PolyCurveFitter.evaluatePolynomial;
-
 public abstract class Deviations {
     public static double calculateRMS(ParametricModel model, double[] params, double[] xData, double[] yData) {
         double[] fittedY = model.value(xData, params);

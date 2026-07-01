@@ -5,7 +5,7 @@ import com.magicdeaks.heatcapacity.frames.MainFrame;
 import javax.swing.*;
 
 public class Main {
-    static void main() {
+    public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             MainFrame mainFrame = new MainFrame();
             mainFrame.show();
