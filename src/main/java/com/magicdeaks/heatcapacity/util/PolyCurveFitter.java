@@ -74,6 +74,7 @@ public abstract class PolyCurveFitter {
 
     // Don't even ask... Gemini wrote it, I am merely a vessel for the great AI overlords.
     // Status update: It doesn't work
+    // Status update: It might work
     public static FitResult fitOrthogonalPolynomial(HeatCapacityData data, int startPower, int powerIncrement, int totalTerms) {
         double[] temperatures = data.temperatures();
         double[] heatCapacities = data.heatCapacities();
@@ -84,23 +85,21 @@ public abstract class PolyCurveFitter {
             throw new IllegalArgumentException("temperatures and heatCapacities arrays must have the same length.");
         }
 
-        double minTemperature = Double.MAX_VALUE;
         double maxTemperature = -Double.MAX_VALUE;
-
         for (int i = 0; i < numberOfPoints; i++) {
             if (heatCapacities[i] <= 0.0) {
                 throw new IllegalArgumentException("heatCapacities must be positive.");
             }
-            if (temperatures[i] < minTemperature) minTemperature = temperatures[i];
             if (temperatures[i] > maxTemperature) maxTemperature = temperatures[i];
         }
 
-        double tempMidpoint = minTemperature + (maxTemperature - minTemperature) / 2.0;
-        double tempScaleFactor = maxTemperature - tempMidpoint;
+        // FIX: Remove centering to avoid generating non-sparse cross-terms.
+        // We still scale by maxTemperature to ensure numerical stability.
+        double tempScaleFactor = maxTemperature; 
 
         double[] scaledTemperatures = new double[numberOfPoints];
         for (int i = 0; i < numberOfPoints; i++) {
-            scaledTemperatures[i] = (temperatures[i] - tempMidpoint) / tempScaleFactor;
+            scaledTemperatures[i] = temperatures[i] / tempScaleFactor;
         }
 
         double[] currentOrthoPoly = new double[numberOfPoints];
@@ -111,24 +110,22 @@ public abstract class PolyCurveFitter {
         for (int i = 0; i < numberOfPoints; i++) {
             currentOrthoPoly[i] = Math.pow(scaledTemperatures[i], startPower);
             double weight = 1.0 / heatCapacities[i];
-            weightsSquared[i] = weight * weight;
+            weightsSquared[i] = weight * weight; // Standard relative error weighting
         }
 
-        int maxIterations = (int) Math.ceil((double) (totalTerms - startPower + powerIncrement) / powerIncrement) + 2;
+        int maxIterations = totalTerms + 2;
         double[] prevPrevBasisCoeffs = new double[maxIterations];
         double[] prevBasisCoeffs = new double[maxIterations];
         double[] currentBasisCoeffs = new double[maxIterations];
         double[] orthoFitCoeffs = new double[maxIterations];
 
         double recurrenceAlpha = 0, recurrenceBeta = 0, prevNormSquared = 1.0;
-        double targetIterations = (double) (totalTerms - startPower + powerIncrement) / powerIncrement;
 
         int currentIteration = 1;
-        currentBasisCoeffs[0] = 1;
+        currentBasisCoeffs[0] = 1.0; 
 
-        // Orthogonal fitting iteration loop
-        // I'm pretty sure the original code used a while (true)... It still hurts my soul...
-        while (true) {
+        // FIX: Removed while(true) and fixed iteration targets
+        while (currentIteration <= totalTerms) {
             double sumPolySq = 0;
             double sumXPolySq = 0;
             double sumXPolyPrevPoly = 0;
@@ -160,65 +157,39 @@ public abstract class PolyCurveFitter {
                 orthoFitCoeffs[i] += currentFitStep * currentBasisCoeffs[i];
             }
 
-            if (currentIteration >= targetIterations) break;
+            if (currentIteration == totalTerms) break;
 
-            int lastIterCount = currentIteration;
-            currentIteration += 1;
-            currentBasisCoeffs[currentIteration] = 1;
-
-            for (int i = 0; i < lastIterCount; i++) {
-                if (currentIteration - i != 0) {
-                    prevPrevBasisCoeffs[currentIteration - i - 1] = prevBasisCoeffs[currentIteration - i - 1];
-                }
-                prevBasisCoeffs[currentIteration - i] = currentBasisCoeffs[currentIteration - i];
+            // FIX: Clean, mathematically direct calculation of the next basis coefficients
+            double[] nextBasisCoeffs = new double[maxIterations];
+            for (int i = 0; i <= currentIteration; i++) {
+                double termX = (i > 0) ? currentBasisCoeffs[i - 1] : 0.0;
+                double termAlpha = recurrenceAlpha * currentBasisCoeffs[i];
+                double termBeta = recurrenceBeta * prevBasisCoeffs[i];
+                nextBasisCoeffs[i] = termX - termAlpha - termBeta;
             }
 
-            for (int i = 0; i < lastIterCount; i++) {
-                currentBasisCoeffs[i] = 0;
-                if (i != 0) {
-                    currentBasisCoeffs[i] += prevBasisCoeffs[i - 1];
-                }
+            // Clean array shifting
+            System.arraycopy(prevBasisCoeffs, 0, prevPrevBasisCoeffs, 0, maxIterations);
+            System.arraycopy(currentBasisCoeffs, 0, prevBasisCoeffs, 0, maxIterations);
+            System.arraycopy(nextBasisCoeffs, 0, currentBasisCoeffs, 0, maxIterations);
 
-                currentBasisCoeffs[i] -= recurrenceAlpha * prevBasisCoeffs[i];
-                if (currentIteration >= 3 && currentIteration - 2 >= i) {
-                    currentBasisCoeffs[i] -= recurrenceBeta * prevPrevBasisCoeffs[i];
-                }
-            }
+            currentIteration++;
         }
 
-        // Matrix generation for back-transformation to standard polynomial coefficients
-        double[][] binomialMatrix = new double[totalTerms + 1][totalTerms + 1];
-        double[] finalStandardCoeffs = new double[totalTerms + 1];
-
-        for (int i = 0; i < totalTerms + 1; i++) {
-            binomialMatrix[0][i] = 1;
-            binomialMatrix[i][0] = 1;
-        }
-
-        for (int i = 1; i < totalTerms + 1; i++) {
-            for (int j = 1; j < totalTerms + 1; j++) {
-                binomialMatrix[i][j] = binomialMatrix[i - 1][j] + binomialMatrix[i][j - 1];
-            }
-        }
-
-        for (int i = 0; i < totalTerms + 1; i++) {
-            int binomialOffset = 0;
-            for (int j = i; j < totalTerms + 1; j++) {
-                double sign = ((j + i) % 2 == 0) ? 1.0 : -1.0;
-                finalStandardCoeffs[i] += (binomialMatrix[i][binomialOffset] * orthoFitCoeffs[j] * Math.pow(tempMidpoint, j - i) * sign) / Math.pow(tempScaleFactor, j);
-                binomialOffset++;
-            }
-        }
+        // FIX: Removed tangled binomial expansion. 
+        // Back-transformation is now a robust, direct inverse scale.
         double[] powers = new double[totalTerms];
-        for (int i = 0; i < totalTerms; i++) {
-            powers[i] = startPower + powerIncrement * i;
+        double[] finalStandardCoeffs = new double[totalTerms];
+
+        for (int j = 0; j < totalTerms; j++) {
+            powers[j] = startPower + powerIncrement * j;
+            finalStandardCoeffs[j] = orthoFitCoeffs[j] / Math.pow(tempScaleFactor, powers[j]);
         }
 
-        double pctRMS = calculateRMS(powers, Arrays.copyOf(finalStandardCoeffs, powers.length), temperatures, heatCapacities);
+        double pctRMS = calculateRMS(powers, finalStandardCoeffs, temperatures, heatCapacities);
 
-        return new FitResult(Arrays.copyOf(finalStandardCoeffs, powers.length), pctRMS);
+        return new FitResult(finalStandardCoeffs, pctRMS);
     }
-
     /**
      * Calculates heat capacity values from a given fit
      *

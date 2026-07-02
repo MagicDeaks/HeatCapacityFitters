@@ -27,9 +27,6 @@ import static com.magicdeaks.heatcapacity.util.Deviations.getDeviations;
 import static com.magicdeaks.heatcapacity.util.PolyCurveFitter.evaluatePolynomial;
 import static com.magicdeaks.heatcapacity.util.PolyCurveFitter.fitOrthogonalPolynomial;
 
-//TODO Scale HC Graph
-//TODO I think the orthogonal fitter is screwed up
-
 public class MidTFitTab extends JPanel implements PropertyChangeListener {
     private final AnalysisSession session;
 
@@ -40,8 +37,8 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
     private ChartPanel devPanel;
     private JFreeChart midTGraph;
     private JFreeChart devGraph;
-    private final DefaultXYDataset dataset = new DefaultXYDataset();
-    private final DefaultXYDataset deviations = new DefaultXYDataset();
+    private DefaultXYDataset dataset = new DefaultXYDataset();
+    private DefaultXYDataset deviations = new DefaultXYDataset();
     private final double[] EMPTY_ROW = new double[13];
 
     private JTextField startPowerField, incrField;
@@ -51,6 +48,8 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
 
     private PolynomialTableModel polyTableModel;
     private JTable polyTable;
+
+    private JComboBox<String> fitSelector;
 
     public MidTFitTab(AnalysisSession session) {
         this.session = session;
@@ -72,6 +71,14 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
 
         fitButton = new JButton("Run Mid T Fits");
         statusLabel = new JLabel("Waiting for data...");
+
+        String[] fitNames = new String[NUM_FITS];
+        for (int i = 0; i < NUM_FITS; i++) {
+            fitNames[i] = "Fit-" + i;
+        }
+        fitSelector = new JComboBox<>(fitNames);
+        fitSelector.setEnabled(false);
+        fitSelector.addActionListener(_ -> updateChart());
 
         fitButton.setEnabled(false);
         fitButton.addActionListener(_ -> executeFit());
@@ -101,21 +108,11 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
         XYPlot devPlot = devGraph.getXYPlot();
         XYLineAndShapeRenderer devRenderer = (XYLineAndShapeRenderer) devPlot.getRenderer();
 
+        devRenderer.setSeriesLinesVisible(0, false);
+        devRenderer.setSeriesShapesVisible(0, true);
+
         devPlot.setRenderer(devRenderer);
         
-        // Could I have looped over each seies? Probably, but that is the least of my concerns
-        setDevLines(0, devRenderer);
-        setDevLines(1, devRenderer);
-        setDevLines(2, devRenderer);
-        setDevLines(3, devRenderer);
-        setDevLines(4, devRenderer);
-        setDevLines(5, devRenderer);
-        setDevLines(6, devRenderer);
-        setDevLines(7, devRenderer);
-        setDevLines(8, devRenderer);
-        setDevLines(9, devRenderer);
-        setDevLines(10, devRenderer);
-
         ValueMarker zeroLine = new ValueMarker(0.0);
         zeroLine.setPaint(Color.BLACK);
         zeroLine.setStroke(new BasicStroke(1.5f));
@@ -161,6 +158,9 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
         controlPanel.add(centrePanel, BorderLayout.CENTER);
 
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        actionPanel.add(new JLabel("Fit:"));
+        actionPanel.add(fitSelector);
+        actionPanel.add(Box.createHorizontalStrut(15));
         actionPanel.add(statusLabel);
         actionPanel.add(fitButton);
         controlPanel.add(actionPanel, BorderLayout.SOUTH);
@@ -169,6 +169,7 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
     }
 
     private void executeFit() {
+        fitSelector.setEnabled(false);
         fitButton.setEnabled(false);
         statusLabel.setText("Fitting data...");
 
@@ -183,17 +184,17 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
                 int incr = Integer.parseInt(incrField.getText());
 
                 HeatCapacityData data = getMidTData(session, minT, maxT);
-                System.out.println(Arrays.toString(data.temperatures()));
 
                 for (int i = 0; i < NUM_FITS; i++) {
                     results[i] = fitOrthogonalPolynomial(data, startPower, incr, i + 1);
 
                     powers[i] = new int[i+1];
-                    for (int j = 0; j < i; j++) {
+                    for (int j = 0; j <= i; j++) {
                         powers[i][j] = startPower + incr * j;
                     }
                 }
 
+                System.out.println(Arrays.deepToString(powers));
                 return results;
             }
 
@@ -218,6 +219,7 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
                         polyTableModel.setValueAt(results[i].pctRMS(), i, 12);
                     }
 
+                    fitSelector.setEnabled(true);
                     updateChart();
 
                 } catch (InterruptedException | ExecutionException e) {
@@ -236,8 +238,17 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
     }
 
     private void updateChart() {
-        double minT = Double.parseDouble(minTempField.getText());
-        double maxT = Double.parseDouble(maxTempField.getText());
+        double minT;
+        double maxT;
+        try {
+            minT = Double.parseDouble(minTempField.getText());
+            maxT = Double.parseDouble(maxTempField.getText());
+        } catch (NumberFormatException _) {
+            return;
+        }
+
+        DefaultXYDataset currentDataset = new DefaultXYDataset();
+        DefaultXYDataset currentDeviations = new DefaultXYDataset();
 
         HeatCapacityData rawData = (session.getRawData() != null) ? getMidTData(session, minT, maxT) : null;
 
@@ -253,50 +264,55 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
         FitResult[] fitResults = session.getMidTFit();
         if (fitResults != null) {
             if (Arrays.stream(fitResults).noneMatch(Objects::isNull)) {
-                try {
-                    int pointsCount = 200;
+                int selectedIdx = fitSelector.getSelectedIndex();
 
-                    double[] fitX = new double[pointsCount];
-                    double[][] fitY = new double[NUM_FITS][];
-                    double step = (maxT - minT) / (pointsCount - 1);
+                if (selectedIdx >= 0 && selectedIdx < fitResults.length) {
+                    try {
+                        int pointsCount = 200;
 
-                    for (int i = 0; i < pointsCount; i++) {
-                        fitX[i] = minT + i * step;
-                    }
+                        double[] fitX = new double[pointsCount];
+                        double step = (maxT - minT) / (pointsCount - 1);
 
-                    for (int i = 0; i < fitResults.length; i++) {
-                        double[] doublePowers = new double[powers[i].length];
-
-                        for (int j = 0; j < powers[i].length; j++) {
-                            doublePowers[j] = powers[i][j];
+                        for (int i = 0; i < pointsCount; i++) {
+                            fitX[i] = minT + i * step;
                         }
 
-                        double[][] pairs = new double[fitResults[i].coefficients().length][];
-                        for (int j = 0; j < fitResults[i].coefficients().length; j++) {
-                            pairs[j] = new double[]{fitResults[i].coefficients()[j], doublePowers[j]};
+                        double[] doublePowers = new double[powers[selectedIdx].length];
+
+                        for (int j = 0; j < powers[selectedIdx].length; j++) {
+                            doublePowers[j] = powers[selectedIdx][j];
                         }
 
-                        fitY[i] = evaluatePolynomial(fitX, pairs);
+                        double[][] pairs = new double[fitResults[selectedIdx].coefficients().length][];
+                        for (int j = 0; j < fitResults[selectedIdx].coefficients().length; j++) {
+                            pairs[j] = new double[]{fitResults[selectedIdx].coefficients()[j], doublePowers[j]};
+                            System.out.println(Arrays.toString(pairs[j]));
+                        }
 
-                        dataset.addSeries("Fit-"+i, new double[][]{fitX, fitY[i]});
+                        double[] fitY = evaluatePolynomial(fitX, pairs);
+
+                        currentDataset.addSeries("Heat Capacity", new double[][]{rawData.temperatures(), rawData.heatCapacities()});
+                        currentDataset.addSeries("Fit-" + selectedIdx, new double[][]{fitX, fitY});
 
                         if (rawData != null) {
                             if (rawData.temperatures() != null) {
-                                double[][] deviationsSet = getDeviations(powers[i], fitResults[i].coefficients(), rawData);
+                                double[][] deviationsSet = getDeviations(powers[selectedIdx], fitResults[selectedIdx].coefficients(), rawData);
 
-                                deviations.addSeries("Dev-"+i, deviationsSet);
+                                currentDeviations.addSeries("Dev-"+selectedIdx, deviationsSet);
                             }
                         }
+                    } catch (NumberFormatException _) {
+
                     }
-
-                } catch (NumberFormatException _) {
-
                 }
             }
         }
+        this.dataset = currentDataset;
+        this.deviations = currentDeviations;
 
         midTGraph.getXYPlot().setDataset(this.dataset);
-        devGraph.getXYPlot().setDataset(deviations);
+        devGraph.getXYPlot().setDataset(this.deviations);
+
         this.revalidate();
         this.repaint();
     }
@@ -325,10 +341,4 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
             updateChart();
         }
     }
-
-    private void setDevLines(int series, XYLineAndShapeRenderer renderer) {
-        renderer.setSeriesLinesVisible(series, false);
-        renderer.setSeriesShapesVisible(series, true);
-    }
-
 }

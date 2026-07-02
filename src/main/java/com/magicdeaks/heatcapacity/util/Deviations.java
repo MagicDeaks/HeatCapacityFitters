@@ -15,7 +15,7 @@ public abstract class Deviations {
             }
         }
 
-        return Math.sqrt(sumSquaredPercentageErrors / yData.length);
+        return Math.sqrt(sumSquaredPercentageErrors / yData.length) * 100;
     }
 
     public static double calculateRMS(double[] powers, double[] params, double[] xData, double[] yData) {
@@ -28,7 +28,7 @@ public abstract class Deviations {
             }
         }
 
-        return Math.sqrt(sumSquaredPercentageErrors / yData.length);
+        return Math.sqrt(sumSquaredPercentageErrors / yData.length) * 100;
     }
 
     private static double calculateHeatCapacity(double[] coeff, double[] powers, double temperature) {
