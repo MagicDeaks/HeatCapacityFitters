@@ -25,6 +25,7 @@ public abstract class PolyCurveFitter {
 
         int numPoints = temperatures.length;
 
+        // Past me was getting a little too fancy. Current me doesn't know how to undo his mistakes
         Map<LowTHeatCapacityModel, FitResult> results = new EnumMap<>(LowTHeatCapacityModel.class);
 
         if (numPoints != heatCapacities.length) {
@@ -72,6 +73,7 @@ public abstract class PolyCurveFitter {
     }
 
     // Don't even ask... Gemini wrote it, I am merely a vessel for the great AI overlords.
+    // Status update: It doesn't work
     public static FitResult fitOrthogonalPolynomial(HeatCapacityData data, int startPower, int powerIncrement, int totalTerms) {
         double[] temperatures = data.temperatures();
         double[] heatCapacities = data.heatCapacities();
@@ -125,6 +127,7 @@ public abstract class PolyCurveFitter {
         currentBasisCoeffs[0] = 1;
 
         // Orthogonal fitting iteration loop
+        // I'm pretty sure the original code used a while (true)... It still hurts my soul...
         while (true) {
             double sumPolySq = 0;
             double sumXPolySq = 0;

@@ -4,6 +4,29 @@ import com.magicdeaks.heatcapacity.frames.MainFrame;
 
 import javax.swing.*;
 
+/* Welcome to where my hopes and dreams go to die.
+ *
+ * This program is adapted from the embedded VBA macros of an Excel
+ * sheet, which in turn was adapted from code written by Dr.
+ * Woodfield in 1997. As you might expect, some of it is odd,
+ * mostly because of this fact, as well as the fact that I don't
+ * know how to code. Nevertheless, here we are. An almost fully custom
+ * GUI (I used JFreeChart, sue me), fitting functions only God
+ * understands, and a narrow enough use case such that this program
+ * lives and dies with me and me alone.
+ *
+ * I didn't start this project resenting it. I learned to hate it.
+ * I hate every decision I made up until whatever the previous commit
+ * was. But I won't rewrite or refactor. Instead, I will stew in this
+ * purgatory I have made for myself.
+ *
+ * If the Excel lives on, use it. No good can come from this program.
+ */
+
+
+
+
+
 public class Main {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -11,6 +34,7 @@ public class Main {
             mainFrame.show();
         });
 
+        
        // CompositeSpecificHeatModel lowTModel = new CompositeSpecificHeatModel(
        //         CompositeSpecificHeatModel.SpecialFitModel.LINEAR,
        //         CompositeSpecificHeatModel.SpecialFitModel.LATTICE_3,

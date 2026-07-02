@@ -27,9 +27,8 @@ import static com.magicdeaks.heatcapacity.util.Deviations.getDeviations;
 import static com.magicdeaks.heatcapacity.util.PolyCurveFitter.evaluatePolynomial;
 import static com.magicdeaks.heatcapacity.util.PolyCurveFitter.fitOrthogonalPolynomial;
 
-//TODO Fix Deviations Graph markers/lines
-//TODO Why is RMS weird?
 //TODO Scale HC Graph
+//TODO I think the orthogonal fitter is screwed up
 
 public class MidTFitTab extends JPanel implements PropertyChangeListener {
     private final AnalysisSession session;
@@ -102,10 +101,20 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
         XYPlot devPlot = devGraph.getXYPlot();
         XYLineAndShapeRenderer devRenderer = (XYLineAndShapeRenderer) devPlot.getRenderer();
 
-        devRenderer.setSeriesLinesVisible(0, false);
-        devRenderer.setSeriesShapesVisible(0, true);
-
         devPlot.setRenderer(devRenderer);
+        
+        // Could I have looped over each seies? Probably, but that is the least of my concerns
+        setDevLines(0, devRenderer);
+        setDevLines(1, devRenderer);
+        setDevLines(2, devRenderer);
+        setDevLines(3, devRenderer);
+        setDevLines(4, devRenderer);
+        setDevLines(5, devRenderer);
+        setDevLines(6, devRenderer);
+        setDevLines(7, devRenderer);
+        setDevLines(8, devRenderer);
+        setDevLines(9, devRenderer);
+        setDevLines(10, devRenderer);
 
         ValueMarker zeroLine = new ValueMarker(0.0);
         zeroLine.setPaint(Color.BLACK);
@@ -316,4 +325,10 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
             updateChart();
         }
     }
+
+    private void setDevLines(int series, XYLineAndShapeRenderer renderer) {
+        renderer.setSeriesLinesVisible(series, false);
+        renderer.setSeriesShapesVisible(series, true);
+    }
+
 }
