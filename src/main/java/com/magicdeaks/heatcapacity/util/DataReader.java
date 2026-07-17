@@ -5,6 +5,7 @@ import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -24,7 +25,7 @@ public abstract class DataReader {
         try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
             int lineCount;
 
-            try (Stream<String> lines = Files.lines(filePath)) {
+            try (Stream<String> lines = Files.lines(filePath, StandardCharsets.ISO_8859_1)) {
                 lineCount = (int) lines.count();
             }
 

@@ -1,5 +1,7 @@
 package com.magicdeaks.heatcapacity.session;
 
+import com.magicdeaks.heatcapacity.models.CompositeSpecificHeatModel;
+import com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel;
 import com.magicdeaks.heatcapacity.records.FitResult;
 import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 
@@ -11,6 +13,10 @@ public class AnalysisSession {
     private FitResult lowTFit;
     private FitResult[] midTFit;
     private FitResult highTFit;
+
+    private CompositeSpecificHeatModel lowTModel;
+    private int[][] midTModel;
+    private HighTSpecificHeatModel highTModel;
 
     private double atoms;
     private double molecularWeight;
@@ -25,6 +31,18 @@ public class AnalysisSession {
         support.addPropertyChangeListener(listener);
     }
 
+    public CompositeSpecificHeatModel getLowTModel() {
+        return lowTModel;
+    }
+    
+    public int[][] getMidTModel() {
+        return midTModel;
+    }
+
+    public HighTSpecificHeatModel getHighTModel() {
+        return highTModel;
+    }
+
     public HeatCapacityData getRawData() {
         return rawData;
     }
@@ -35,6 +53,27 @@ public class AnalysisSession {
 
     public double getMolecularWeight() {
         return molecularWeight;
+    }
+
+    public void setLowTModel(CompositeSpecificHeatModel model) {
+        CompositeSpecificHeatModel oldModel = this.lowTModel;
+        this.lowTModel = model;
+
+        support.firePropertyChange("lowTModel", oldModel, model);
+    }
+
+    public void setMidTModel(int[][] model) {
+        int[][] oldModel = this.midTModel;
+        this.midTModel = model;
+
+        support.firePropertyChange("midTModel", oldModel, model);
+    }
+
+    public void setHighTModel(HighTSpecificHeatModel model) {
+        HighTSpecificHeatModel oldModel = this.highTModel;
+        this.highTModel = model;
+
+        support.firePropertyChange("highTModel", oldModel, model);
     }
 
     public void setAtoms(double atoms) {

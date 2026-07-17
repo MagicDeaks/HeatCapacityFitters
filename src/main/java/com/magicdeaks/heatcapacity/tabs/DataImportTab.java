@@ -142,6 +142,7 @@ public class DataImportTab extends JPanel {
             @Override
             protected HeatCapacityData doInBackground() throws Exception {
                 molecularWeight = DataProcesser.getMolecularWeight(FORMULA);
+                System.out.println("Formula successfully loaded!");
 
                 HeatCapacityData parsedData = DataReader.readDAT(selectedDataFile.getAbsolutePath());
 
