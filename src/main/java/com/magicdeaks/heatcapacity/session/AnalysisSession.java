@@ -13,6 +13,7 @@ public class AnalysisSession {
     private FitResult lowTFit;
     private FitResult[] midTFit;
     private FitResult highTFit;
+    private int midTSelect;
 
     private CompositeSpecificHeatModel lowTModel;
     private int[][] midTModel;
@@ -29,6 +30,10 @@ public class AnalysisSession {
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         support.addPropertyChangeListener(listener);
+    }
+
+    public int getMidTSelect() {
+        return midTSelect;
     }
 
     public CompositeSpecificHeatModel getLowTModel() {
@@ -53,6 +58,13 @@ public class AnalysisSession {
 
     public double getMolecularWeight() {
         return molecularWeight;
+    }
+
+    public void setMidTSelect(int select) {
+        int oldSelect = this.midTSelect;
+        this.midTSelect = select;
+
+        support.firePropertyChange("midTSelect", oldSelect, select);
     }
 
     public void setLowTModel(CompositeSpecificHeatModel model) {

@@ -64,8 +64,8 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
     private void initComponents() {
         minTempField = new JTextField("40", 5);
         maxTempField = new JTextField("305", 5);
-        iterSpinner = new JSpinner(new SpinnerNumberModel(1000, 100, 10000000, 100));
-        calcSpinner = new JSpinner(new SpinnerNumberModel(10000, 1000, 100000000, 1000));
+        iterSpinner = new JSpinner(new SpinnerNumberModel(100000, 100, 10000000, 100));
+        calcSpinner = new JSpinner(new SpinnerNumberModel(1000000, 1000, 100000000, 1000));
 
         termSelector = new JComboBox<>(HighTSpecificHeatModel.HighTFitModel.values());
         addTermButton = new JButton("Add Term");
@@ -196,11 +196,11 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
             case EINSTEIN:
                 if (activeModelTerms.contains(selectedModel)) {
                     paramTableModel.addParameter("n", session.getAtoms() / 3, 0.0, session.getAtoms(), false);
-                    paramTableModel.addParameter("θ_E", 1000, 0.0, 2000.0, false);
+                    paramTableModel.addParameter("θ_E", 1000, 0.0, 4000.0, false);
                     break;
                 }
                 paramTableModel.addParameter("n", session.getAtoms() / 3, 0.0, session.getAtoms(), false);
-                paramTableModel.addParameter("θ_E", 500, 0.0, 2000.0, false);
+                paramTableModel.addParameter("θ_E", 300, 0.0, 4000.0, false);
 
                 break;
             default:
@@ -246,6 +246,7 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
             protected FitResult doInBackground() {
                 HighTSpecificHeatModel.HighTFitModel[] modelArray = activeModelTerms.toArray(new HighTSpecificHeatModel.HighTFitModel[0]);
                 HighTSpecificHeatModel highTModel = new HighTSpecificHeatModel(modelArray);
+                session.setHighTModel(highTModel);
 
                 double[] initialParams = paramTableModel.getColumnDataAsDouble(1);
                 double[] lowerBounds = paramTableModel.getColumnDataAsDouble(2);

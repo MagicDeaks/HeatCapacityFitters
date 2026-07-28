@@ -78,7 +78,11 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
         }
         fitSelector = new JComboBox<>(fitNames);
         fitSelector.setEnabled(false);
-        fitSelector.addActionListener(_ -> updateChart());
+        fitSelector.addActionListener(_ -> {
+            updateChart();
+            session.setMidTSelect(fitSelector.getSelectedIndex());
+            System.out.println(fitSelector.getSelectedIndex());
+        });
 
         fitButton.setEnabled(false);
         fitButton.addActionListener(_ -> executeFit());
@@ -195,6 +199,7 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
                 }
 
                 System.out.println(Arrays.deepToString(powers));
+                session.setMidTModel(powers);
                 return results;
             }
 

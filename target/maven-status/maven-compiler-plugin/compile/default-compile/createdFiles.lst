@@ -15,6 +15,7 @@ com\magicdeaks\heatcapacity\records\HeatCapacityData.class
 com\magicdeaks\heatcapacity\tabs\MidTFitTab.class
 com\magicdeaks\heatcapacity\tabs\HighTFitTab$2.class
 com\magicdeaks\heatcapacity\tabs\DataImportTab.class
+com\magicdeaks\heatcapacity\tabs\ThermCalcTab.class
 com\magicdeaks\heatcapacity\util\MatrixMath.class
 com\magicdeaks\heatcapacity\models\CompositeSpecificHeatModel.class
 com\magicdeaks\heatcapacity\models\CompositeSpecificHeatModel$ModelTerm.class
@@ -23,6 +24,7 @@ com\magicdeaks\heatcapacity\util\ScientificNotationRenderer.class
 com\magicdeaks\heatcapacity\models\ParametricModel.class
 com\magicdeaks\heatcapacity\tabs\MidTFitTab$1.class
 com\magicdeaks\heatcapacity\models\CompositeSpecificHeatModel$SchottkyTerm.class
+com\magicdeaks\heatcapacity\models\OverlapTableModel.class
 com\magicdeaks\heatcapacity\models\HighTSpecificHeatModel$StandardModels.class
 com\magicdeaks\heatcapacity\tabs\LowTFitTab.class
 com\magicdeaks\heatcapacity\tabs\DataImportTab$1.class

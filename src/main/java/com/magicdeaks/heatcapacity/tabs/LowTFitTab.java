@@ -2,6 +2,7 @@ package com.magicdeaks.heatcapacity.tabs;
 
 import com.magicdeaks.heatcapacity.models.CompositeSpecificHeatModel;
 import com.magicdeaks.heatcapacity.models.ParameterTableModel;
+import com.magicdeaks.heatcapacity.models.CompositeSpecificHeatModel.SpecialFitModel;
 import com.magicdeaks.heatcapacity.records.FitResult;
 import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 import com.magicdeaks.heatcapacity.session.AnalysisSession;
@@ -181,50 +182,91 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
         CompositeSpecificHeatModel.SpecialFitModel selectedModel = (CompositeSpecificHeatModel.SpecialFitModel) termSelector.getSelectedItem();
         if (selectedModel == null) return;
 
-        activeModelTerms.add(selectedModel);
-
         switch (selectedModel) {
             case LINEAR:
+                activeModelTerms.add(SpecialFitModel.LINEAR);
                 paramTableModel.addParameter("Linear (γ)", 0.001, 0.0, 1.0, false);
                 break;
             case LATTICE_3:
+                activeModelTerms.add(SpecialFitModel.LATTICE_3);
                 paramTableModel.addParameter("Lattice T^3 (β_3)", 0.0001, 0.0, 1.0, false);
                 break;
             case LATTICE_5:
-                paramTableModel.addParameter("Lattice T^5 (β_5)", -5e-6, -1.0, 0.0, false);
+                activeModelTerms.add(SpecialFitModel.LATTICE_3);
+                activeModelTerms.add(SpecialFitModel.LATTICE_5);
+                paramTableModel.addParameter("Lattice T^3 (β_3)", 0.0001, 0.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^5 (β_5)", -5e-6, -1.0, 1.0, false);
                 break;
             case LATTICE_7:
-                paramTableModel.addParameter("Lattice T^7 (β_7)", 1e-8, 0.0, 1.0, false);
+                activeModelTerms.add(SpecialFitModel.LATTICE_3);
+                activeModelTerms.add(SpecialFitModel.LATTICE_5);
+                activeModelTerms.add(SpecialFitModel.LATTICE_7);
+                paramTableModel.addParameter("Lattice T^3 (β_3)", 0.0001, 0.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^5 (β_5)", -5e-6, -1.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^7 (β_7)", 1e-8, -1.0, 1.0, false);
                 break;
             case LATTICE_9:
-                paramTableModel.addParameter("Lattice T^9 (β_9)", -1e-10, -1.0, 0.0, false);
+                activeModelTerms.add(SpecialFitModel.LATTICE_3);
+                activeModelTerms.add(SpecialFitModel.LATTICE_5);
+                activeModelTerms.add(SpecialFitModel.LATTICE_7);
+                activeModelTerms.add(SpecialFitModel.LATTICE_9);
+                paramTableModel.addParameter("Lattice T^3 (β_3)", 0.0001, 0.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^5 (β_5)", -5e-6, -1.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^7 (β_7)", 1e-8, -1.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^9 (β_9)", -1e-10, -1.0, 1.0, false);
                 break;
             case LATTICE_11:
-                paramTableModel.addParameter("Lattice T^11 (β_11)", 1e-12, 0.0, 1.0, false);
+                activeModelTerms.add(SpecialFitModel.LATTICE_3);
+                activeModelTerms.add(SpecialFitModel.LATTICE_5);
+                activeModelTerms.add(SpecialFitModel.LATTICE_7);
+                activeModelTerms.add(SpecialFitModel.LATTICE_9);
+                activeModelTerms.add(SpecialFitModel.LATTICE_11);
+                paramTableModel.addParameter("Lattice T^3 (β_3)", 0.0001, 0.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^5 (β_5)", -5e-6, -1.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^7 (β_7)", 1e-8, -1.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^9 (β_9)", -1e-10, -1.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^11 (β_11)", 1e-12, -1.0, 1.0, false);
                 break;
             case LATTICE_13:
-                paramTableModel.addParameter("Lattice T^13 (β_13)", -1e-14, -1.0, 0.0, false);
+                activeModelTerms.add(SpecialFitModel.LATTICE_3);
+                activeModelTerms.add(SpecialFitModel.LATTICE_5);
+                activeModelTerms.add(SpecialFitModel.LATTICE_7);
+                activeModelTerms.add(SpecialFitModel.LATTICE_9);
+                activeModelTerms.add(SpecialFitModel.LATTICE_11);
+                activeModelTerms.add(SpecialFitModel.LATTICE_13);
+                paramTableModel.addParameter("Lattice T^3 (β_3)", 0.0001, 0.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^5 (β_5)", -5e-6, -1.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^7 (β_7)", 1e-8, -1.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^9 (β_9)", -1e-10, -1.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^11 (β_11)", 1e-12, -1.0, 1.0, false);
+                paramTableModel.addParameter("Lattice T^13 (β_13)", -1e-14, -1.0, 1.0, false);
                 break;
             case GAP:
+                activeModelTerms.add(SpecialFitModel.GAP);
                 paramTableModel.addParameter("Gap: Scale (B)", 1.0, 0.0, 100.0, false);
                 paramTableModel.addParameter("Gap: Power (n)", 3.0, -5.0, 5.0, true); // Often fixed
                 paramTableModel.addParameter("Gap: Energy (Δ)", 10.0, 0.0, 100.0, false);
                 break;
             case SCHOTTKY:
+                activeModelTerms.add(SpecialFitModel.SCHOTTKY);
                 paramTableModel.addParameter("Schottky: Moles (n)", 1.0, 0.0, 10.0, false);
                 paramTableModel.addParameter("Schottky: Degeneracy (g)", 1.0, 0.0, 10.0, true);
                 paramTableModel.addParameter("Schottky: Splitting (θ)", 5.0, 0.0, 50.0, false);
                 break;
             case UPTURN_2:
+                activeModelTerms.add(SpecialFitModel.UPTURN_2);
                 paramTableModel.addParameter("Lattice T^-2 (β_-2)", 0.001, 0.0, 100.0, false);
                 break;
             case UPTURN_3:
+                activeModelTerms.add(SpecialFitModel.UPTURN_3);
                 paramTableModel.addParameter("Lattice T^-3 (β_-3)", -0.001, -100.0, 0.0, false);
                 break;
             case UPTURN_4:
+                activeModelTerms.add(SpecialFitModel.UPTURN_4);
                 paramTableModel.addParameter("Lattice T^-4 (β_-4)", 0.001, 0.0, 100.0, false);
                 break;
             default:
+                activeModelTerms.add(selectedModel);
                 paramTableModel.addParameter(selectedModel.name() + " Coeff", 1.0, -10.0, 10.0, false);
                 break;
         }
@@ -265,6 +307,7 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
             protected FitResult doInBackground() throws Exception {
                 CompositeSpecificHeatModel.SpecialFitModel[] modelArray = activeModelTerms.toArray(new CompositeSpecificHeatModel.SpecialFitModel[0]);
                 CompositeSpecificHeatModel lowTModel = new CompositeSpecificHeatModel(modelArray);
+                session.setLowTModel(lowTModel);
 
                 double[] initialParams = paramTableModel.getColumnDataAsDouble(1);
                 double[] lowerBounds = paramTableModel.getColumnDataAsDouble(2);

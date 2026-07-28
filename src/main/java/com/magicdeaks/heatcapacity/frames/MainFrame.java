@@ -5,14 +5,24 @@ import com.magicdeaks.heatcapacity.tabs.DataImportTab;
 import com.magicdeaks.heatcapacity.tabs.HighTFitTab;
 import com.magicdeaks.heatcapacity.tabs.LowTFitTab;
 import com.magicdeaks.heatcapacity.tabs.MidTFitTab;
+import com.magicdeaks.heatcapacity.tabs.ThermCalcTab;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 
 public class MainFrame {
     private JFrame frame;
-    private JTabbedPane tabbedPane;
+    private JPanel cardPanel;
+    private CardLayout cardLayout;
     private AnalysisSession session;
+
+    private static final String DATA_IMPORT = "Import";
+    private static final String LOW_T = "Low T";
+    private static final String MID_T = "Mid T";
+    private static final String HIGH_T = "High T";
+    private static final String THERM_CALC = "Therm Calc";
+    private static final String RESULTS = "Results";
 
     public MainFrame() {
         session = new AnalysisSession();
@@ -23,34 +33,46 @@ public class MainFrame {
         frame = new JFrame();
         frame.setLayout(new BorderLayout());
 
-        tabbedPane = new JTabbedPane();
+        cardLayout = new CardLayout();
+        cardPanel = new JPanel(cardLayout);
 
-        DataImportTab dataTab = new DataImportTab(session);
-        tabbedPane.addTab("Data Import", dataTab);
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+        JMenu fitMenu = new JMenu("Fitting");
+        JMenu calcMenu = new JMenu("Calculate");
 
-        JPanel lowTTab = new LowTFitTab(session);
-        tabbedPane.addTab("Low T", lowTTab);
+        menuBar.add(fileMenu);
+        menuBar.add(fitMenu);
+        menuBar.add(calcMenu);
 
-        JPanel midTTab = new MidTFitTab(session);
-        tabbedPane.addTab("Mid T", midTTab);
+        frame.setJMenuBar(menuBar);
 
-        JPanel highTTab = new HighTFitTab(session);
-        tabbedPane.addTab("High T", highTTab);
-
-        JPanel thermCalcTab = new JPanel();
-        thermCalcTab.add(new JLabel("Calculate Thermodynamic Functions"));
-        tabbedPane.addTab("Therm Calc", thermCalcTab);
-
+        addView(new DataImportTab(session), DATA_IMPORT, fileMenu);
+        addView(new LowTFitTab(session), LOW_T, fitMenu);
+        addView(new MidTFitTab(session), MID_T, fitMenu);
+        addView(new HighTFitTab(session), HIGH_T, fitMenu);
+        addView(new ThermCalcTab(session), THERM_CALC, calcMenu);
+        
         JPanel resultsTab = new JPanel();
-        resultsTab.add(new JLabel("Results & Export"));
-        tabbedPane.addTab("Results", resultsTab);
+        resultsTab.add(new JLabel("Results"));
+        addView(resultsTab, RESULTS, calcMenu);
 
-        frame.add(tabbedPane, BorderLayout.CENTER);
+        frame.add(cardPanel, BorderLayout.CENTER);
 
         frame.setTitle("Heat Capacity Fitter");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(1000, 700);
         frame.setLocationRelativeTo(null);
+    }
+
+    private void addView(Component component, String identifier, JMenu menu) {
+        cardPanel.add(component, identifier);
+
+        JMenuItem menuItem = new JMenuItem(identifier);
+
+        menuItem.addActionListener((ActionEvent _) -> cardLayout.show(cardPanel, identifier));
+
+        menu.add(menuItem);
     }
 
     public void show() {
