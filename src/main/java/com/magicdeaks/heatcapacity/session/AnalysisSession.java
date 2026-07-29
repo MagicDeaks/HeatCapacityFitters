@@ -4,6 +4,7 @@ import com.magicdeaks.heatcapacity.models.CompositeSpecificHeatModel;
 import com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel;
 import com.magicdeaks.heatcapacity.records.FitResult;
 import com.magicdeaks.heatcapacity.records.HeatCapacityData;
+import com.magicdeaks.heatcapacity.records.ThermFunctions;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -22,6 +23,8 @@ public class AnalysisSession {
     private double atoms;
     private double molecularWeight;
 
+    private ThermFunctions thermFunctions;
+
     private final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
     public void removePropertyChangeListener(PropertyChangeListener listener) {
@@ -30,6 +33,10 @@ public class AnalysisSession {
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         support.addPropertyChangeListener(listener);
+    }
+
+    public ThermFunctions getThermFunctions() {
+        return thermFunctions;
     }
 
     public int getMidTSelect() {
@@ -58,6 +65,13 @@ public class AnalysisSession {
 
     public double getMolecularWeight() {
         return molecularWeight;
+    }
+
+    public void setThermFunctions(ThermFunctions func) {
+        ThermFunctions oldFunc = this.thermFunctions;
+        this.thermFunctions = func;
+
+        support.firePropertyChange("thermFunctions", oldFunc, func);
     }
 
     public void setMidTSelect(int select) {

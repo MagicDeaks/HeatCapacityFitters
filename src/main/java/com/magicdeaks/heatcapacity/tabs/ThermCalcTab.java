@@ -3,6 +3,8 @@ package com.magicdeaks.heatcapacity.tabs;
 import com.magicdeaks.heatcapacity.models.CompositeSpecificHeatModel;
 import com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel;
 import com.magicdeaks.heatcapacity.models.OverlapTableModel;
+import com.magicdeaks.heatcapacity.records.HeatCapacityData;
+import com.magicdeaks.heatcapacity.records.ThermFunctions;
 import com.magicdeaks.heatcapacity.session.AnalysisSession;
 import com.magicdeaks.heatcapacity.util.ScientificNotationRenderer;
 
@@ -11,6 +13,7 @@ import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
 import static com.magicdeaks.heatcapacity.util.PolyCurveFitter.evaluatePolynomial;
 
@@ -36,6 +39,13 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
 
     private double[][] lowMidOverlaps = new double[3][];
     private double[][] midHighOverlaps = new double[3][];
+    
+    private double lowOverlapT = 12;
+    private double highOverlapT = 50;
+
+    private ThermFunctions thermFunctions;
+
+    private double[] resultTemps = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 273.15, 280, 290, 298.15, 300};
 
     public ThermCalcTab(AnalysisSession session) {
         this.session = session;
@@ -112,12 +122,6 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
 
         CompositeSpecificHeatModel lowModel = session.getLowTModel();
 
-        int[] midModel = session.getMidTModel()[midSelect];
-        double[] midCoeffs = session.getMidTFit()[midSelect].coefficients();
-
-        System.out.println(Arrays.toString(midModel));
-        System.out.println(Arrays.toString(midCoeffs));
-
         HighTSpecificHeatModel highModel = session.getHighTModel();
 
         double min = 5;
@@ -135,6 +139,9 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         double[] lowHC = lowModel.value(temps, session.getLowTFit().coefficients());
         double[] highHC = highModel.value(temps, session.getHighTFit().coefficients());
         
+        int[] midModel = session.getMidTModel()[midSelect];
+        double[] midCoeffs = session.getMidTFit()[midSelect].coefficients();
+
         double[][] pairs = new double[midModel.length][];
 
         for (int i = 0; i < midModel.length; i++) {
@@ -208,7 +215,46 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         }
     }
 
-    @Override
-    public void propertyChange(PropertyChangeEvent event) {
+    private void calculateFunctions() {
+        double[] lowTemps = getTRange(resultTemps, 0, lowOverlapT);
+        double[] midTemps = getTRange(resultTemps, lowOverlapT, highOverlapT);
+        double[] highTemps = getTRange(resultTemps, highOverlapT, 310);
+
+        double[] lowHC = session.getLowTModel().value(lowTemps, session.getLowTFit().coefficients());
+        double[] highHC = session.getHighTModel().value(highTemps, session.getHighTFit().coefficients());
+
+        int[] midModel = session.getMidTModel()[session.getMidTSelect()];
+        double[] midCoeffs = session.getMidTFit()[session.getMidTSelect()].coefficients();
+
+        double[][] pairs = new double[midModel.length][];
+
+        for (int i = 0; i < midModel.length; i++) {
+            pairs[i] = new double[]{midCoeffs[i], midModel[i]};
+        } double[] midHC = evaluatePolynomial(midTemps, pairs);
+
+        double[] finalHC = new double[resultTemps.length];
+
+        System.arraycopy(lowHC, 0, finalHC, 0, lowHC.length);
+        System.arraycopy(midHC, 0, finalHC, lowHC.length, midHC.length);
+        System.arraycopy(highHC, 0, finalHC, lowHC.length + midHC.length, highHC.length);
+
+
     }
-}
+
+    public static double[] getTRange(double[] rawTemps, double minT, double maxT) {
+        int minIdx = IntStream.range(0, rawTemps.length)
+                .filter(i -> rawTemps[i] >= minT)
+                .findFirst()
+                .orElse(0);
+        int maxIdx = IntStream.range(0, rawTemps.length)
+                .filter(i -> rawTemps[i] <= maxT)
+                .reduce((_, second) -> second)
+                .orElse(rawTemps.length - 1);
+
+        double[] temps = Arrays.copyOfRange(rawTemps, minIdx, maxIdx+1);
+
+        return temps;
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent event) { } }
