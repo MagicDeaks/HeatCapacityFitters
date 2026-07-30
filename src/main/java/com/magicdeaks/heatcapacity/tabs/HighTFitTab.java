@@ -359,7 +359,7 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
         this.repaint();
     }
 
-    public static HeatCapacityData getHighTData(AnalysisSession session, double minT, double maxT) {
+    private HeatCapacityData getHighTData(AnalysisSession session, double minT, double maxT) {
         HeatCapacityData data = session.getRawData();
 
         int minIdx = IntStream.range(0, data.temperatures().length)

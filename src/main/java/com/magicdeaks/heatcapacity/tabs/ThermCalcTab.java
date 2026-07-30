@@ -7,6 +7,7 @@ import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 import com.magicdeaks.heatcapacity.records.ThermFunctions;
 import com.magicdeaks.heatcapacity.session.AnalysisSession;
 import com.magicdeaks.heatcapacity.util.ScientificNotationRenderer;
+import com.magicdeaks.heatcapacity.util.ThermCalc;
 
 import javax.swing.*;
 import java.awt.*;
@@ -36,6 +37,7 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
     private OverlapTableModel highOverlapModel;
 
     private JButton overlapButton;
+    private JButton thermButton;
 
     private double[][] lowMidOverlaps = new double[3][];
     private double[][] midHighOverlaps = new double[3][];
@@ -77,6 +79,11 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         overlapButton.addActionListener(_ -> {
             findOverlaps();
             displayOverlaps();
+        });
+
+        thermButton = new JButton("Calculate Functions");
+        thermButton.addActionListener(_ -> {
+            calculateFunctions();
         });
 
         gbc.gridx = 0;
@@ -216,9 +223,9 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
     }
 
     private void calculateFunctions() {
-        double[] lowTemps = getTRange(resultTemps, 0, lowOverlapT);
-        double[] midTemps = getTRange(resultTemps, lowOverlapT, highOverlapT);
-        double[] highTemps = getTRange(resultTemps, highOverlapT, 310);
+        double[] lowTemps = ThermCalc.getTRange(resultTemps, 0, lowOverlapT);
+        double[] midTemps = ThermCalc.getTRange(resultTemps, lowOverlapT, highOverlapT);
+        double[] highTemps = ThermCalc.getTRange(resultTemps, highOverlapT, 310);
 
         double[] lowHC = session.getLowTModel().value(lowTemps, session.getLowTFit().coefficients());
         double[] highHC = session.getHighTModel().value(highTemps, session.getHighTFit().coefficients());
@@ -238,22 +245,39 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         System.arraycopy(midHC, 0, finalHC, lowHC.length, midHC.length);
         System.arraycopy(highHC, 0, finalHC, lowHC.length + midHC.length, highHC.length);
 
+        double[] integralHC = ThermCalc.calculateHeatCapacity(session, lowOverlapT, highOverlapT, 0, 310, 0.01);
+        double[] integralTemps = ThermCalc.calculateTemperatures(0, 310, 0.01);
 
+        double[] integralEnthalpies = ThermCalc.calculateEnthalpies(integralTemps, integralHC);
+        double[] integralEntropies = ThermCalc.calculateEntropies(integralTemps, integralHC);
+        double[] integralGibbs = ThermCalc.calculateGibbs(integralTemps, integralEnthalpies, integralEntropies);
+
+        double[] finalEnthalpies = new double[resultTemps.length];
+        double[] finalEntropies = new double[resultTemps.length];
+        double[] finalGibbs = new double[resultTemps.length];
+
+        for (int i = 0; i < finalEnthalpies.length; i++) {
+            finalEnthalpies[i] = integralEnthalpies[findIdx(resultTemps[i], integralTemps)];
+        }
+
+        for (int i = 0; i < finalEntropies.length; i++) {
+            finalEntropies[i] = integralEntropies[findIdx(resultTemps[i], integralTemps)];
+        }
+
+        for (int i = 0; i < finalGibbs.length; i++) {
+            finalGibbs[i] = integralGibbs[findIdx(resultTemps[i], integralTemps)];
+        }
+
+        session.setThermFunctions(new ThermFunctions(resultTemps, finalHC, finalEnthalpies, finalEntropies, finalGibbs));
     }
 
-    public static double[] getTRange(double[] rawTemps, double minT, double maxT) {
-        int minIdx = IntStream.range(0, rawTemps.length)
-                .filter(i -> rawTemps[i] >= minT)
-                .findFirst()
-                .orElse(0);
-        int maxIdx = IntStream.range(0, rawTemps.length)
-                .filter(i -> rawTemps[i] <= maxT)
-                .reduce((_, second) -> second)
-                .orElse(rawTemps.length - 1);
-
-        double[] temps = Arrays.copyOfRange(rawTemps, minIdx, maxIdx+1);
-
-        return temps;
+    private int findIdx(double target, double[] array) {
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == target) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     @Override

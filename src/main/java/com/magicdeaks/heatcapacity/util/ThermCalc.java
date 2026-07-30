@@ -8,14 +8,25 @@ import java.util.stream.IntStream;
 import com.magicdeaks.heatcapacity.session.AnalysisSession;
 
 public abstract class ThermCalc {
-
-    public static double[] calculateHeatCapacity(AnalysisSession session, double lowOverlapT, double highOverlapT, double minT, double maxT, double dT) throws Exception {
+    public static double[] calculateTemperatures(double minT, double maxT, double dT) {
         int points = (int) ((maxT - minT) / dT);
-        
+
         double[] temperatures = new double[points];
         for (int i = 0; i < points; i++) {
             temperatures[i] = dT * (i+1) + minT;
         }
+
+        return temperatures;
+    }
+
+    public static double[] calculateHeatCapacity(AnalysisSession session,
+                                                    double lowOverlapT,
+                                                    double highOverlapT,
+                                                    double minT,
+                                                    double maxT,
+                                                    double dT) {
+
+        double[] temperatures = calculateTemperatures(minT, maxT, dT);
 
         double[] lowT = getTRange(temperatures, minT, lowOverlapT);
         double[] midT = getTRange(temperatures, lowOverlapT, highOverlapT);
@@ -38,7 +49,7 @@ public abstract class ThermCalc {
         double[] fullHC = new double[points];
 
         if (lowHC.length + midHC.length + highHC.length != points) {
-            throw new Exception("Array lengths do not align.");
+            throw new IllegalArgumentException("Array lengths do not align.");
         }
 
         for (int i = 0; i < lowHC.length; i++) {
@@ -96,6 +107,20 @@ public abstract class ThermCalc {
         }
 
         return entropies;
+    }
+
+    public static double[] calculateGibbs(double[] temperatures, double[] enthalpies, double[] entropies) {
+        if (temperatures.length != enthalpies.length || enthalpies.length != entropies.length) {
+            throw new IllegalArgumentException("Arguments must have same length.");
+        }
+
+        double[] gibbs = new double[temperatures.length];
+
+        for (int i = 0; i < temperatures.length; i++) {
+            gibbs[i] = -(enthalpies[i] - temperatures[i] * entropies[i]) / temperatures[i];
+        }
+
+        return gibbs;
     }
 
     public static double[] getTRange(double[] rawTemps, double minT, double maxT) {

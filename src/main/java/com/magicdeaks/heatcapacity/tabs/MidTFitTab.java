@@ -322,7 +322,7 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
         this.repaint();
     }
 
-    public static HeatCapacityData getMidTData(AnalysisSession session, double minT, double maxT) {
+    private HeatCapacityData getMidTData(AnalysisSession session, double minT, double maxT) {
         HeatCapacityData data = session.getRawData();
 
         int minIdx = IntStream.range(0, data.temperatures().length)
