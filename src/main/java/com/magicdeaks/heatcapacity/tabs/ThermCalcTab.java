@@ -19,15 +19,18 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
 
   private JPanel leftPanel;
   private JPanel centrePanel;
-  private JPanel centreCentrePanel;
-  private JPanel centreCentreLeftPanel;
-  private JPanel centreCentreRightPanel;
+  private JPanel centreTopPanel;
+  private JPanel centreTopLeftPanel;
+  private JPanel centreTopRightPanel;
   private JPanel centreBottomPanel;
   private JPanel centreBottomTopPanel;
   private JPanel centreBottomCentrePanel;
 
   private JTable lowOverlapTable;
   private JTable highOverlapTable;
+
+  private JTextField lowField;
+  private JTextField highField;
 
   private OverlapTableModel lowOverlapModel;
   private OverlapTableModel highOverlapModel;
@@ -40,8 +43,6 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
 
   private double lowOverlapT = 12;
   private double highOverlapT = 50;
-
-  private ThermFunctions thermFunctions;
 
   private double[] resultTemps = {
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 110, 120,
@@ -66,12 +67,12 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
 
     centrePanel = new JPanel();
     centrePanel.setLayout(new BorderLayout());
-    centreCentrePanel = new JPanel();
-    centrePanel.add(centreCentrePanel, BorderLayout.CENTER);
-    centreCentreLeftPanel = new JPanel();
-    centreCentrePanel.add(centreCentreLeftPanel, BorderLayout.WEST);
-    centreCentreRightPanel = new JPanel();
-    centreCentrePanel.add(centreCentreRightPanel, BorderLayout.EAST);
+    centreTopPanel = new JPanel();
+    centrePanel.add(centreTopPanel, BorderLayout.NORTH);
+    centreTopLeftPanel = new JPanel();
+    centreTopPanel.add(centreTopLeftPanel, BorderLayout.WEST);
+    centreTopRightPanel = new JPanel();
+    centreTopPanel.add(centreTopRightPanel, BorderLayout.EAST);
 
     centreBottomPanel = new JPanel();
     centrePanel.add(centreBottomPanel, BorderLayout.SOUTH);
@@ -84,15 +85,39 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
     overlapButton = new JButton("Find Overlaps");
     overlapButton.addActionListener(
         _ -> {
-          findOverlaps();
-          displayOverlaps();
+          overlapButton.setEnabled(false);
+          try {
+            findOverlaps();
+            displayOverlaps();
+          } catch (Exception e) {
+            System.err.println(e);
+          }
+          overlapButton.setEnabled(true);
         });
 
     thermButton = new JButton("Calculate Functions");
     thermButton.addActionListener(
         _ -> {
-          calculateFunctions();
+          thermButton.setEnabled(false);
+          try {
+            calculateFunctions();
+          } catch (Exception e) {
+            System.err.println(e);
+          }
+          thermButton.setEnabled(true);
         });
+
+    lowField = new JTextField(5);
+    highField = new JTextField(5);
+
+    centreBottomTopPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+    centreBottomTopPanel.add(new JLabel("Low/Mid Overlap:"));
+    centreBottomTopPanel.add(lowField);
+    centreBottomTopPanel.add(Box.createHorizontalStrut(15));
+    centreBottomTopPanel.add(new JLabel("Mid/High Overlaps:"));
+    centreBottomTopPanel.add(highField);
+    centreBottomTopPanel.add(Box.createHorizontalStrut(15));
+    centreBottomTopPanel.add(thermButton);
 
     gbc.gridx = 0;
     gbc.gridy = 0;
@@ -123,6 +148,9 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
 
     lowOverlapTable.setPreferredScrollableViewportSize(new Dimension(300, 100));
     highOverlapTable.setPreferredScrollableViewportSize(new Dimension(300, 100));
+
+    leftPanel.setBorder(BorderFactory.createTitledBorder("Find Overlaps"));
+    centreBottomTopPanel.setBorder(BorderFactory.createTitledBorder("Set Overlaps"));
   }
 
   private void findOverlaps() {

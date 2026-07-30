@@ -10,6 +10,7 @@ C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\
 C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\heatcapacity\models\PolynomialTableModel.java
 C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\heatcapacity\records\FitResult.java
 C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\heatcapacity\records\HeatCapacityData.java
+C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\heatcapacity\records\ThermFunctions.java
 C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\heatcapacity\session\AnalysisSession.java
 C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\heatcapacity\tabs\DataImportTab.java
 C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\heatcapacity\tabs\HighTFitTab.java
@@ -25,3 +26,4 @@ C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\
 C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\heatcapacity\util\MatrixMath.java
 C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\heatcapacity\util\PolyCurveFitter.java
 C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\heatcapacity\util\ScientificNotationRenderer.java
+C:\Users\deaco\Coding\IntelliJ\HeatCapacityFitters\src\main\java\com\magicdeaks\heatcapacity\util\ThermCalc.java

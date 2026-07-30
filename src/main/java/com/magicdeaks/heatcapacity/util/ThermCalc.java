@@ -46,6 +46,8 @@ public abstract class ThermCalc {
 
     double[] midHC = evaluatePolynomial(midT, pairs);
 
+    int points = (int) ((maxT - minT) / dT);
+
     double[] fullHC = new double[points];
 
     if (lowHC.length + midHC.length + highHC.length != points) {
