@@ -151,9 +151,10 @@ public abstract class DataProcesser {
      */
     public static double getMolecularWeight(String formula) {
         Stack<Double> stack = new Stack<>();
-        // Use a single-element array to pass the index by reference
         int[] pos = {0};
         int n = formula.length();
+
+        int currentPrefixMultiplier = 1;
 
         while (pos[0] < n) {
             char c = formula.charAt(pos[0]);
@@ -166,13 +167,26 @@ public abstract class DataProcesser {
                 while (!stack.isEmpty() && stack.peek() != -1.0) {
                     groupWeight += stack.pop();
                 }
-                stack.pop(); // Remove the '(' marker
+                if (!stack.isEmpty()) {
+                    stack.pop();
+                }
                 pos[0]++;
 
-                // Call the extracted helper method
                 int count = parseMultiplier(formula, pos);
                 stack.push(groupWeight * count);
 
+            } else if (c == '+') {
+                double sum = 0;
+                while (!stack.isEmpty() && stack.peek() != -1.0) {
+                    sum += stack.pop();
+                }
+                stack.push(sum);
+
+                pos[0]++;
+            } else if (c == '*') {
+                pos[0]++;
+            } else if (Character.isDigit(c)) {
+                currentPrefixMultiplier = parseMultiplier(formula, pos);
             } else if (Character.isUpperCase(c)) {
                 StringBuilder element = new StringBuilder();
                 element.append(c);
@@ -188,10 +202,12 @@ public abstract class DataProcesser {
                     throw new IllegalArgumentException("Unknown element: " + elStr);
                 }
 
-                // Call the extracted helper method
                 int count = parseMultiplier(formula, pos);
-                stack.push(ATOMIC_WEIGHTS.get(elStr) * count);
+                stack.push(ATOMIC_WEIGHTS.get(elStr) * count * currentPrefixMultiplier);
 
+                currentPrefixMultiplier = 1;
+            } else if (Character.isWhitespace(c)) {
+                pos[0]++;
             } else {
                 throw new IllegalArgumentException("Invalid character encountered: " + c);
             }
@@ -199,15 +215,17 @@ public abstract class DataProcesser {
 
         double totalWeight = 0;
         while (!stack.isEmpty()) {
-            totalWeight += stack.pop();
+            if (stack.peek() < 0) {
+                stack.pop();
+            } else {
+                totalWeight += stack.pop();
+            }
         }
 
         return totalWeight;
     }
 
-    /**
-     * Helper method to parse numeric multipliers and update the string index.
-     */
+    /** Helper method to parse numeric multipliers and update the string index. */
     private static int parseMultiplier(String formula, int[] pos) {
         int count = 0;
         int n = formula.length();
@@ -218,7 +236,8 @@ public abstract class DataProcesser {
         return count == 0 ? 1 : count; // Default to 1 if no numbers were parsed
     }
 
-    public static HeatCapacityData scaleHeatCapacity(HeatCapacityData data, double mass, double molecularWeight) {
+    public static HeatCapacityData scaleHeatCapacity(
+            HeatCapacityData data, double mass, double molecularWeight) {
         double[] scaledHeatCapacities = new double[data.heatCapacities().length];
         double moles = mass / molecularWeight / 1000;
 
@@ -233,7 +252,9 @@ public abstract class DataProcesser {
         double[] heatCapacities = new double[data.heatCapacities().length];
 
         for (int i = 0; i < data.heatCapacities().length; i++) {
-            heatCapacities[i] = data.heatCapacities()[i] - copperHeatCapacity(data.temperatures()[i], massCopper);
+            heatCapacities[i] =
+                    data.heatCapacities()[i]
+                            - copperHeatCapacity(data.temperatures()[i], massCopper);
         }
 
         return new HeatCapacityData(data.temperatures(), heatCapacities);
@@ -244,27 +265,29 @@ public abstract class DataProcesser {
         double heatCapacity;
 
         if (temperature < 40.5843) {
-            heatCapacity = 0.000692858819282776 * temperature
-                    + 0.0000475948636951698 * Math.pow(temperature, 3)
-                    - 1.04180866056848E-09 * Math.pow(temperature, 5)
-                    + 1.26371655110613E-10 * Math.pow(temperature, 7)
-                    - 2.53014563096065E-13 * Math.pow(temperature, 9)
-                    + 2.25138590822923E-16 * Math.pow(temperature, 11)
-                    - 1.07090804759429E-19 * Math.pow(temperature, 13)
-                    + 2.6444890044424E-23 * Math.pow(temperature, 15)
-                    - 2.66258434671265E-27 * Math.pow(temperature, 17);
+            heatCapacity =
+                    0.000692858819282776 * temperature
+                            + 0.0000475948636951698 * Math.pow(temperature, 3)
+                            - 1.04180866056848E-09 * Math.pow(temperature, 5)
+                            + 1.26371655110613E-10 * Math.pow(temperature, 7)
+                            - 2.53014563096065E-13 * Math.pow(temperature, 9)
+                            + 2.25138590822923E-16 * Math.pow(temperature, 11)
+                            - 1.07090804759429E-19 * Math.pow(temperature, 13)
+                            + 2.6444890044424E-23 * Math.pow(temperature, 15)
+                            - 2.66258434671265E-27 * Math.pow(temperature, 17);
         } else {
-            heatCapacity = 7.49698353726173
-                    - 0.815860283884158 * temperature
-                    + 0.0326991063439956 * temperature * temperature
-                    - 0.000519689428865549 * Math.pow(temperature, 3)
-                    + 4.81457234263551E-06 * Math.pow(temperature, 4)
-                    - 0.0000000286851860256 * Math.pow(temperature, 5)
-                    + 1.13310041876692E-10 * Math.pow(temperature, 6)
-                    - 2.95384552740994E-13 * Math.pow(temperature, 7)
-                    + 4.88678166369441E-16 * Math.pow(temperature, 8)
-                    - 4.64923935272884E-19 * Math.pow(temperature, 9)
-                    + 1.93717962359027E-22 * Math.pow(temperature, 10);
+            heatCapacity =
+                    7.49698353726173
+                            - 0.815860283884158 * temperature
+                            + 0.0326991063439956 * temperature * temperature
+                            - 0.000519689428865549 * Math.pow(temperature, 3)
+                            + 4.81457234263551E-06 * Math.pow(temperature, 4)
+                            - 0.0000000286851860256 * Math.pow(temperature, 5)
+                            + 1.13310041876692E-10 * Math.pow(temperature, 6)
+                            - 2.95384552740994E-13 * Math.pow(temperature, 7)
+                            + 4.88678166369441E-16 * Math.pow(temperature, 8)
+                            - 4.64923935272884E-19 * Math.pow(temperature, 9)
+                            + 1.93717962359027E-22 * Math.pow(temperature, 10);
         }
 
         heatCapacity *= molesCopper;
