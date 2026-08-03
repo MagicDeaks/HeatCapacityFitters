@@ -36,6 +36,7 @@ com\magicdeaks\heatcapacity\frames\MainFrame.class
 com\magicdeaks\heatcapacity\models\HighTSpecificHeatModel$ModelTerm.class
 com\magicdeaks\heatcapacity\records\ThermFunctions.class
 com\magicdeaks\heatcapacity\tabs\HighTFitTab$1.class
+com\magicdeaks\heatcapacity\extra\Aluminum.class
 com\magicdeaks\heatcapacity\util\DataProcesser.class
 com\magicdeaks\heatcapacity\util\HighTFunctions.class
 com\magicdeaks\heatcapacity\temp\FitterDemonstration.class
