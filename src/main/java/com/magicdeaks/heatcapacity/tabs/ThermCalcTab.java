@@ -5,6 +5,7 @@ import static com.magicdeaks.heatcapacity.util.PolyCurveFitter.evaluatePolynomia
 import com.magicdeaks.heatcapacity.models.CompositeSpecificHeatModel;
 import com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel;
 import com.magicdeaks.heatcapacity.models.OverlapTableModel;
+import com.magicdeaks.heatcapacity.models.ThermFuncTableModel;
 import com.magicdeaks.heatcapacity.records.ThermFunctions;
 import com.magicdeaks.heatcapacity.session.AnalysisSession;
 import com.magicdeaks.heatcapacity.util.ScientificNotationRenderer;
@@ -32,11 +33,15 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
     private JTable lowOverlapTable;
     private JTable highOverlapTable;
 
+    private JTable thermFuncTable;
+
     private JTextField lowField;
     private JTextField highField;
 
     private OverlapTableModel lowOverlapModel;
     private OverlapTableModel highOverlapModel;
+
+    private ThermFuncTableModel thermFuncTableModel;
 
     private JButton overlapButton;
     private JButton thermButton;
@@ -65,8 +70,10 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         leftPanel = new JPanel();
         leftPanel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.fill = GridBagConstraints.BOTH;
         gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.weightx = 0.0;
+        gbc.weighty = 0.0;
 
         centrePanel = new JPanel();
         centrePanel.setLayout(new BorderLayout());
@@ -106,6 +113,7 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
                         lowOverlapT = Double.parseDouble(lowField.getText());
                         highOverlapT = Double.parseDouble(highField.getText());
                         calculateFunctions();
+                        updateFunctions();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -141,18 +149,35 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         lowOverlapTable.setDefaultRenderer(Double.class, new ScientificNotationRenderer());
         highOverlapTable.setDefaultRenderer(Double.class, new ScientificNotationRenderer());
 
+        thermFuncTableModel = new ThermFuncTableModel();
+        thermFuncTable = new JTable(thermFuncTableModel);
+        thermFuncTable.setDefaultRenderer(Double.class, new ScientificNotationRenderer());
+
         gbc.gridy = 1;
         leftPanel.add(new JLabel("Low/Mid Overlaps"), gbc);
         gbc.gridy = 2;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
         leftPanel.add(new JScrollPane(lowOverlapTable), gbc);
 
+        gbc.weightx = 0.0;
+        gbc.weighty = 0.0;
         gbc.gridy = 3;
         leftPanel.add(new JLabel("Mid/High Overlaps"), gbc);
         gbc.gridy = 4;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
         leftPanel.add(new JScrollPane(highOverlapTable), gbc);
 
         lowOverlapTable.setPreferredScrollableViewportSize(new Dimension(300, 100));
         highOverlapTable.setPreferredScrollableViewportSize(new Dimension(300, 100));
+
+        centreBottomCentrePanel.setLayout(new BorderLayout());
+
+        centreBottomCentrePanel.add(new JScrollPane(thermFuncTable), BorderLayout.CENTER);
+        thermFuncTable.setPreferredScrollableViewportSize(new Dimension(600, 300));
+        centreBottomCentrePanel.setBorder(
+                BorderFactory.createTitledBorder("Thermodynamic Functions"));
 
         leftPanel.setBorder(BorderFactory.createTitledBorder("Find Overlaps"));
         centreBottomTopPanel.setBorder(BorderFactory.createTitledBorder("Set Overlaps"));
@@ -347,6 +372,23 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         session.setThermFunctions(
                 new ThermFunctions(
                         resultTemps, finalHC, finalEnthalpies, finalEntropies, finalGibbs));
+    }
+
+    private void updateFunctions() {
+        ThermFunctions func = session.getThermFunctions();
+
+        thermFuncTableModel.clearAll();
+
+        for (int i = 0; i < func.temperatures().length; i++) {
+            thermFuncTableModel.addFunctions(
+                    new double[] {
+                        func.temperatures()[i],
+                        func.heatCapacities()[i],
+                        func.enthalpies()[i],
+                        func.entropies()[i],
+                        func.gibbs()[i]
+                    });
+        }
     }
 
     private int findIdx(double target, double[] array) {
