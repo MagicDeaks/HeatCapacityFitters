@@ -333,12 +333,12 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
                                 for (int i = 0; i < NUM_FITS; i++) {
                                     updatedFits[i] =
                                             new FitResult(
-                                                    updatedFits[i].coefficients(),
-                                                    updatedFits[i].pctRMS(),
+                                                    fitResults[i].coefficients(),
+                                                    fitResults[i].pctRMS(),
                                                     new Deviations(
                                                             getDeviations(
                                                                     powers[i],
-                                                                    updatedFits[i].coefficients(),
+                                                                    fitResults[i].coefficients(),
                                                                     rawData)));
 
                                     session.setMidTFit(updatedFits);

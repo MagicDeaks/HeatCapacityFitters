@@ -5,165 +5,166 @@ import com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel;
 import com.magicdeaks.heatcapacity.records.FitResult;
 import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 import com.magicdeaks.heatcapacity.records.ThermFunctions;
-
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.Serializable;
 
-public class AnalysisSession {
-    private HeatCapacityData rawData;
-    private FitResult lowTFit;
-    private FitResult[] midTFit;
-    private FitResult highTFit;
-    private int midTSelect;
+public class AnalysisSession implements Serializable {
+  private static final long serialVersionUID = 1L;
+  private HeatCapacityData rawData;
+  private FitResult lowTFit;
+  private FitResult[] midTFit;
+  private FitResult highTFit;
+  private int midTSelect;
 
-    private CompositeSpecificHeatModel lowTModel;
-    private int[][] midTModel;
-    private HighTSpecificHeatModel highTModel;
+  private CompositeSpecificHeatModel lowTModel;
+  private int[][] midTModel;
+  private HighTSpecificHeatModel highTModel;
 
-    private double atoms;
-    private double molecularWeight;
+  private double atoms;
+  private double molecularWeight;
 
-    private ThermFunctions thermFunctions;
+  private ThermFunctions thermFunctions;
 
-    private final PropertyChangeSupport support = new PropertyChangeSupport(this);
+  private final PropertyChangeSupport support = new PropertyChangeSupport(this);
 
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        support.removePropertyChangeListener(listener);
-    }
+  public void removePropertyChangeListener(PropertyChangeListener listener) {
+    support.removePropertyChangeListener(listener);
+  }
 
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        support.addPropertyChangeListener(listener);
-    }
+  public void addPropertyChangeListener(PropertyChangeListener listener) {
+    support.addPropertyChangeListener(listener);
+  }
 
-    public ThermFunctions getThermFunctions() {
-        return thermFunctions;
-    }
+  public ThermFunctions getThermFunctions() {
+    return thermFunctions;
+  }
 
-    public int getMidTSelect() {
-        return midTSelect;
-    }
+  public int getMidTSelect() {
+    return midTSelect;
+  }
 
-    public CompositeSpecificHeatModel getLowTModel() {
-        return lowTModel;
-    }
-    
-    public int[][] getMidTModel() {
-        return midTModel;
-    }
+  public CompositeSpecificHeatModel getLowTModel() {
+    return lowTModel;
+  }
 
-    public HighTSpecificHeatModel getHighTModel() {
-        return highTModel;
-    }
+  public int[][] getMidTModel() {
+    return midTModel;
+  }
 
-    public HeatCapacityData getRawData() {
-        return rawData;
-    }
+  public HighTSpecificHeatModel getHighTModel() {
+    return highTModel;
+  }
 
-    public double getAtoms() {
-        return atoms;
-    }
+  public HeatCapacityData getRawData() {
+    return rawData;
+  }
 
-    public double getMolecularWeight() {
-        return molecularWeight;
-    }
+  public double getAtoms() {
+    return atoms;
+  }
 
-    public void setThermFunctions(ThermFunctions func) {
-        ThermFunctions oldFunc = this.thermFunctions;
-        this.thermFunctions = func;
+  public double getMolecularWeight() {
+    return molecularWeight;
+  }
 
-        support.firePropertyChange("thermFunctions", oldFunc, func);
-    }
+  public void setThermFunctions(ThermFunctions func) {
+    ThermFunctions oldFunc = this.thermFunctions;
+    this.thermFunctions = func;
 
-    public void setMidTSelect(int select) {
-        int oldSelect = this.midTSelect;
-        this.midTSelect = select;
+    support.firePropertyChange("thermFunctions", oldFunc, func);
+  }
 
-        support.firePropertyChange("midTSelect", oldSelect, select);
-    }
+  public void setMidTSelect(int select) {
+    int oldSelect = this.midTSelect;
+    this.midTSelect = select;
 
-    public void setLowTModel(CompositeSpecificHeatModel model) {
-        CompositeSpecificHeatModel oldModel = this.lowTModel;
-        this.lowTModel = model;
+    support.firePropertyChange("midTSelect", oldSelect, select);
+  }
 
-        support.firePropertyChange("lowTModel", oldModel, model);
-    }
+  public void setLowTModel(CompositeSpecificHeatModel model) {
+    CompositeSpecificHeatModel oldModel = this.lowTModel;
+    this.lowTModel = model;
 
-    public void setMidTModel(int[][] model) {
-        int[][] oldModel = this.midTModel;
-        this.midTModel = model;
+    support.firePropertyChange("lowTModel", oldModel, model);
+  }
 
-        support.firePropertyChange("midTModel", oldModel, model);
-    }
+  public void setMidTModel(int[][] model) {
+    int[][] oldModel = this.midTModel;
+    this.midTModel = model;
 
-    public void setHighTModel(HighTSpecificHeatModel model) {
-        HighTSpecificHeatModel oldModel = this.highTModel;
-        this.highTModel = model;
+    support.firePropertyChange("midTModel", oldModel, model);
+  }
 
-        support.firePropertyChange("highTModel", oldModel, model);
-    }
+  public void setHighTModel(HighTSpecificHeatModel model) {
+    HighTSpecificHeatModel oldModel = this.highTModel;
+    this.highTModel = model;
 
-    public void setAtoms(double atoms) {
-        double oldAtoms = this.atoms;
-        this.atoms = atoms;
+    support.firePropertyChange("highTModel", oldModel, model);
+  }
 
-        support.firePropertyChange("atoms", oldAtoms, atoms);
-    }
+  public void setAtoms(double atoms) {
+    double oldAtoms = this.atoms;
+    this.atoms = atoms;
 
-    public void setMolecularWeight(double molecularWeight) {
-        double oldMolecularWeight = this.molecularWeight;
-        this.molecularWeight = molecularWeight;
+    support.firePropertyChange("atoms", oldAtoms, atoms);
+  }
 
-        support.firePropertyChange("molecularWeight", oldMolecularWeight, molecularWeight);
-    }
+  public void setMolecularWeight(double molecularWeight) {
+    double oldMolecularWeight = this.molecularWeight;
+    this.molecularWeight = molecularWeight;
 
-    public void setRawData(HeatCapacityData rawData) {
-        HeatCapacityData oldData = this.rawData;
-        this.rawData = rawData;
+    support.firePropertyChange("molecularWeight", oldMolecularWeight, molecularWeight);
+  }
 
-        support.firePropertyChange("rawData", oldData, rawData);
-    }
+  public void setRawData(HeatCapacityData rawData) {
+    HeatCapacityData oldData = this.rawData;
+    this.rawData = rawData;
 
-    public void setLowTFit(FitResult lowTFit) {
-        FitResult oldFit = this.lowTFit;
-        this.lowTFit = lowTFit;
+    support.firePropertyChange("rawData", oldData, rawData);
+  }
 
-        support.firePropertyChange("lowTFit", oldFit, lowTFit);
-    }
+  public void setLowTFit(FitResult lowTFit) {
+    FitResult oldFit = this.lowTFit;
+    this.lowTFit = lowTFit;
 
-    public void setMidTFit(FitResult midTFit, int degree) {
-        FitResult[] oldFit = this.midTFit;
-        this.midTFit[degree] = midTFit;
+    support.firePropertyChange("lowTFit", oldFit, lowTFit);
+  }
 
-        support.firePropertyChange("midTFit", oldFit, midTFit);
-    }
+  public void setMidTFit(FitResult midTFit, int degree) {
+    FitResult[] oldFit = this.midTFit;
+    this.midTFit[degree] = midTFit;
 
-    public void setMidTFit(FitResult[] midTFit) {
-        FitResult[] oldFit = this.midTFit;
-        this.midTFit = midTFit;
+    support.firePropertyChange("midTFit", oldFit, midTFit);
+  }
 
-        support.firePropertyChange("midTFit", oldFit, midTFit);
-    }
+  public void setMidTFit(FitResult[] midTFit) {
+    FitResult[] oldFit = this.midTFit;
+    this.midTFit = midTFit;
 
-    public void setHighTFit(FitResult highTFit) {
-        FitResult oldFit = this.highTFit;
-        this.highTFit = highTFit;
+    support.firePropertyChange("midTFit", oldFit, midTFit);
+  }
 
-        support.firePropertyChange("highTFit", oldFit, highTFit);
-    }
+  public void setHighTFit(FitResult highTFit) {
+    FitResult oldFit = this.highTFit;
+    this.highTFit = highTFit;
 
-    public FitResult getLowTFit() {
-        return lowTFit;
-    }
+    support.firePropertyChange("highTFit", oldFit, highTFit);
+  }
 
-    public FitResult getMidTFit(int degree) {
-        return midTFit[degree];
-    }
+  public FitResult getLowTFit() {
+    return lowTFit;
+  }
 
-    public FitResult[] getMidTFit() {
-        return midTFit;
-    }
+  public FitResult getMidTFit(int degree) {
+    return midTFit[degree];
+  }
 
-    public FitResult getHighTFit() {
-        return highTFit;
-    }
+  public FitResult[] getMidTFit() {
+    return midTFit;
+  }
+
+  public FitResult getHighTFit() {
+    return highTFit;
+  }
 }
