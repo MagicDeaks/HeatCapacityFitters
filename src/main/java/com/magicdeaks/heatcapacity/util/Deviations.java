@@ -3,15 +3,40 @@ package com.magicdeaks.heatcapacity.util;
 import com.magicdeaks.heatcapacity.models.ParametricModel;
 import com.magicdeaks.heatcapacity.records.HeatCapacityData;
 
+import java.io.Serializable;
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
-public class Deviations {
+public class Deviations implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final double[] TEMPERATURES;
     private final double[] DEVIATIONS;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || this.getClass() != o.getClass()) return false;
+        Deviations deviations = (Deviations) o;
+
+        return Arrays.equals(this.TEMPERATURES, deviations.TEMPERATURES)
+                && Arrays.equals(this.DEVIATIONS, deviations.DEVIATIONS);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Arrays.hashCode(TEMPERATURES);
+        result = 31 * result + Arrays.hashCode(DEVIATIONS);
+        return result;
+    }
 
     public Deviations(double[][] data) {
         this.TEMPERATURES = data[0];
         this.DEVIATIONS = data[1];
+    }
+
+    public Deviations() {
+        this.TEMPERATURES = new double[0];
+        this.DEVIATIONS = new double[0];
     }
 
     public double[] getTemperatures() {

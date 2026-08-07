@@ -1,22 +1,39 @@
 package com.magicdeaks.heatcapacity.models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
-public class CompositeSpecificHeatModel implements ParametricModel {
+public class CompositeSpecificHeatModel implements ParametricModel, Serializable {
+    private static final long serialVersionUID = 1L;
 
     public enum SpecialFitModel {
-        LINEAR, LATTICE_3, LATTICE_5, LATTICE_7, LATTICE_9, LATTICE_11, LATTICE_13,
-        GAP, SCHOTTKY, UPTURN_2, UPTURN_3, UPTURN_4
+        LINEAR,
+        LATTICE_3,
+        LATTICE_5,
+        LATTICE_7,
+        LATTICE_9,
+        LATTICE_11,
+        LATTICE_13,
+        GAP,
+        SCHOTTKY,
+        UPTURN_2,
+        UPTURN_3,
+        UPTURN_4
     }
 
     private final List<ModelTerm> TERMS = new ArrayList<>();
     private final int TOTAL_PARAMETERS;
 
+    public List<ModelTerm> getTerms() {
+        return TERMS;
+    }
+
     /**
-     * Constructor that accepts a variable number of SpecialFitModel enums.
-     * The order of enums dictates the order of parameters in the parameter array.
+     * Constructor that accepts a variable number of SpecialFitModel enums. The order of enums
+     * dictates the order of parameters in the parameter array.
      */
     public CompositeSpecificHeatModel(SpecialFitModel... models) {
         int paramCount = 0;
@@ -35,7 +52,8 @@ public class CompositeSpecificHeatModel implements ParametricModel {
     @Override
     public double[] value(double[] tData, double[] parameters) {
         if (parameters.length != TOTAL_PARAMETERS) {
-            throw new IllegalArgumentException("Expected " + TOTAL_PARAMETERS + " parameters, got " + parameters.length);
+            throw new IllegalArgumentException(
+                    "Expected " + TOTAL_PARAMETERS + " parameters, got " + parameters.length);
         }
 
         double[] yValues = new double[tData.length];
@@ -66,7 +84,8 @@ public class CompositeSpecificHeatModel implements ParametricModel {
 
     // --- Internal Logic for Mathematical Mapping ---
 
-    private abstract static class ModelTerm {
+    private abstract static class ModelTerm implements Serializable {
+        private static final long serialVersionUID = 1L;
         protected final int paramOffset;
 
         public ModelTerm(int paramOffset) {
@@ -74,8 +93,23 @@ public class CompositeSpecificHeatModel implements ParametricModel {
         }
 
         abstract int getParameterCount();
+
         abstract double evaluate(double t, double[] params);
+
         abstract void addJacobianDerivatives(double t, double[] params, double[] jacobianRow);
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ModelTerm model = (ModelTerm) o;
+            return paramOffset == model.paramOffset;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(paramOffset);
+        }
     }
 
     private ModelTerm createTerm(SpecialFitModel model, int offset) {
@@ -105,7 +139,10 @@ public class CompositeSpecificHeatModel implements ParametricModel {
             this.POWER = power;
         }
 
-        @Override int getParameterCount() { return 1; }
+        @Override
+        int getParameterCount() {
+            return 1;
+        }
 
         @Override
         double evaluate(double t, double[] params) {
@@ -116,6 +153,19 @@ public class CompositeSpecificHeatModel implements ParametricModel {
         void addJacobianDerivatives(double t, double[] params, double[] jacobianRow) {
             jacobianRow[paramOffset] = Math.pow(t, POWER); // dC/dp
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PolynomialTerm poly = (PolynomialTerm) o;
+            return POWER == poly.POWER && paramOffset == poly.paramOffset;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(POWER, paramOffset);
+        }
     }
 
     // 3-Parameter Generalized Gap: C = B * T^n * exp(-delta / T)
@@ -123,9 +173,14 @@ public class CompositeSpecificHeatModel implements ParametricModel {
     // params[offset+1] = n (Power of T)
     // params[offset+2] = delta (Energy Gap)
     private static class GapTerm extends ModelTerm {
-        public GapTerm(int offset) { super(offset); }
+        public GapTerm(int offset) {
+            super(offset);
+        }
 
-        @Override int getParameterCount() { return 3; }
+        @Override
+        int getParameterCount() {
+            return 3;
+        }
 
         @Override
         double evaluate(double t, double[] params) {
@@ -161,9 +216,14 @@ public class CompositeSpecificHeatModel implements ParametricModel {
     // params[offset+1] = g (Degeneracy ratio)
     // params[offset+2] = theta (Energy splitting)
     private static class SchottkyTerm extends ModelTerm {
-        public SchottkyTerm(int offset) { super(offset); }
+        public SchottkyTerm(int offset) {
+            super(offset);
+        }
 
-        @Override int getParameterCount() { return 3; }
+        @Override
+        int getParameterCount() {
+            return 3;
+        }
 
         @Override
         double evaluate(double t, double[] params) {
@@ -207,7 +267,8 @@ public class CompositeSpecificHeatModel implements ParametricModel {
 
             // dC/dg
             // Using the same stable logic
-            jacobianRow[paramOffset + 1] = n * (x * x) * expNegX * (1.0 - gExpNegX) / Math.pow(denom, 3) * R;
+            jacobianRow[paramOffset + 1] =
+                    n * (x * x) * expNegX * (1.0 - gExpNegX) / Math.pow(denom, 3) * R;
 
             // dC/dTheta
             // Stable derivative w.r.t theta

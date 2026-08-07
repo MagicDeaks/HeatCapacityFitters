@@ -32,6 +32,7 @@ com\magicdeaks\heatcapacity\tabs\DataImportTab.class
 com\magicdeaks\heatcapacity\tabs\ThermCalcTab.class
 com\magicdeaks\heatcapacity\util\MatrixMath.class
 com\magicdeaks\heatcapacity\models\CompositeSpecificHeatModel.class
+com\magicdeaks\heatcapacity\io\FileSystem.class
 com\magicdeaks\heatcapacity\models\HighTSpecificHeatModel$DebyeTerm.class
 com\magicdeaks\heatcapacity\models\ParametricModel.class
 com\magicdeaks\heatcapacity\tabs\MidTFitTab$1.class
