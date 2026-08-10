@@ -1,18 +1,23 @@
 package com.magicdeaks.heatcapacity.models;
 
-import com.magicdeaks.heatcapacity.util.HighTFunctions;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import static com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel.HighTFitModel.*;
 
-public class HighTSpecificHeatModel implements ParametricModel{
+import com.magicdeaks.heatcapacity.util.HighTFunctions;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+public class HighTSpecificHeatModel implements ParametricModel, Serializable {
+    private static final long serialVersionUID = 1L;
     private static final double h = 0.2;
 
-
     public enum HighTFitModel {
-        LINEAR, SQUARE, DEBYE, EINSTEIN
+        LINEAR,
+        SQUARE,
+        DEBYE,
+        EINSTEIN
     }
 
     public enum StandardModels {
@@ -37,6 +42,10 @@ public class HighTSpecificHeatModel implements ParametricModel{
     private final List<ModelTerm> TERMS = new ArrayList<>();
     private final int TOTAL_PARAMETERS;
 
+    public List<ModelTerm> getTerms() {
+        return TERMS;
+    }
+
     public HighTSpecificHeatModel(HighTFitModel... models) {
         int paramCount = 0;
         for (HighTFitModel model : models) {
@@ -55,10 +64,11 @@ public class HighTSpecificHeatModel implements ParametricModel{
     @Override
     public double[] value(double[] tData, double[] parameters) {
         if (parameters.length != TOTAL_PARAMETERS) {
-            throw new IllegalArgumentException("Expected " + TOTAL_PARAMETERS + " parameters, got " + parameters.length);
+            throw new IllegalArgumentException(
+                    "Expected " + TOTAL_PARAMETERS + " parameters, got " + parameters.length);
         }
 
-        double [] yValues = new double[tData.length];
+        double[] yValues = new double[tData.length];
         for (int i = 0; i < tData.length; i++) {
             double t = tData[i];
             double cTotal = 0.0;
@@ -84,14 +94,32 @@ public class HighTSpecificHeatModel implements ParametricModel{
         return jacobianMatrix;
     }
 
-    private abstract static class ModelTerm {
+    private abstract static class ModelTerm implements Serializable {
+        private static final long serialVersionUID = 1L;
         protected final int paramOffset;
 
-        public ModelTerm(int paramOffset) { this.paramOffset = paramOffset; }
+        public ModelTerm(int paramOffset) {
+            this.paramOffset = paramOffset;
+        }
 
         abstract int getParameterCount();
+
         abstract double evaluate(double t, double[] params);
+
         abstract void addJacobianDerivatives(double t, double[] params, double[] jacobianRow);
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ModelTerm model = (ModelTerm) o;
+            return paramOffset == model.paramOffset;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(paramOffset);
+        }
     }
 
     private ModelTerm createTerm(HighTFitModel model, int offset) {
@@ -112,21 +140,44 @@ public class HighTSpecificHeatModel implements ParametricModel{
             this.POWER = power;
         }
 
-        @Override int getParameterCount() { return 1; }
+        @Override
+        int getParameterCount() {
+            return 1;
+        }
 
         @Override
-        double evaluate(double t, double[] params) {return params[paramOffset] * Math.pow(t, POWER); }
+        double evaluate(double t, double[] params) {
+            return params[paramOffset] * Math.pow(t, POWER);
+        }
 
         @Override
         void addJacobianDerivatives(double t, double[] params, double[] jacobianRow) {
             jacobianRow[paramOffset] = Math.pow(t, POWER);
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PolynomialTerm poly = (PolynomialTerm) o;
+            return POWER == poly.POWER && paramOffset == poly.paramOffset;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(POWER, paramOffset);
+        }
     }
 
     private static class DebyeTerm extends ModelTerm {
-        public DebyeTerm(int offset) { super(offset); }
+        public DebyeTerm(int offset) {
+            super(offset);
+        }
 
-        @Override int getParameterCount() { return 2; }
+        @Override
+        int getParameterCount() {
+            return 2;
+        }
 
         @Override
         double evaluate(double t, double[] params) {
@@ -138,7 +189,7 @@ public class HighTSpecificHeatModel implements ParametricModel{
 
         @Override
         void addJacobianDerivatives(double t, double[] params, double[] jacobianRow) {
-            double n  = params[paramOffset];
+            double n = params[paramOffset];
             double theta = params[paramOffset + 1];
 
             double expMinus = Math.exp(-theta / t);
@@ -150,12 +201,30 @@ public class HighTSpecificHeatModel implements ParametricModel{
             double intermediate = expMinus / ((1 - expMinus) * (1 - expMinus));
             jacobianRow[paramOffset + 1] += n * 9 * 8.314472 * theta / (t * t) * intermediate;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || this.getClass() != o.getClass()) return false;
+            DebyeTerm deb = (DebyeTerm) o;
+            return this.paramOffset == deb.paramOffset;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(paramOffset);
+        }
     }
 
     private static class EinsteinTerm extends ModelTerm {
-        public EinsteinTerm(int offset) { super(offset); }
+        public EinsteinTerm(int offset) {
+            super(offset);
+        }
 
-        @Override int getParameterCount() { return 2; }
+        @Override
+        int getParameterCount() {
+            return 2;
+        }
 
         @Override
         double evaluate(double t, double[] params) {
@@ -174,8 +243,21 @@ public class HighTSpecificHeatModel implements ParametricModel{
             jacobianRow[paramOffset] = HighTFunctions.calculateEinstein(theta, t);
 
             double intermediate = (1 + expMinus) / (1 - expMinus);
-            jacobianRow[paramOffset + 1] = n * jacobianRow[paramOffset] * (2 / theta - (1 / t) * intermediate);
+            jacobianRow[paramOffset + 1] =
+                    n * jacobianRow[paramOffset] * (2 / theta - (1 / t) * intermediate);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || this.getClass() != o.getClass()) return false;
+            EinsteinTerm ein = (EinsteinTerm) o;
+            return this.paramOffset == ein.paramOffset;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(paramOffset);
         }
     }
-
 }
