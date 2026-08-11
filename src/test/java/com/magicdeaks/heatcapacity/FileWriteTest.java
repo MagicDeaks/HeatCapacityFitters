@@ -245,4 +245,46 @@ public class FileWriteTest {
                 initSession.getRawData().heatCapacities(),
                 readSession.getRawData().heatCapacities());
     }
+
+    @Test
+    public void readAndWriteSessionMolecularFormula() {
+        AnalysisSession initSession = new AnalysisSession();
+        String path = "tmp/formulaTest.wtf";
+        String formula = "SmOHCO3";
+
+        initSession.setMolecularFormula(formula);
+
+        FileSystem.writeFile(initSession, path);
+        AnalysisSession readSession = FileSystem.readFile(path).orElseThrow();
+
+        assertEquals(initSession.getMolecularFormula(), readSession.getMolecularFormula());
+    }
+
+    @Test
+    public void readAndWriteSessionPath() {
+        AnalysisSession initSession = new AnalysisSession();
+        String path = "tmp/pathTest.wtf";
+        String datPath = "random file.dat";
+
+        initSession.setPath(datPath);
+
+        FileSystem.writeFile(initSession, path);
+        AnalysisSession readSession = FileSystem.readFile(path).orElseThrow();
+
+        assertEquals(initSession.getPath(), readSession.getPath());
+    }
+
+    @Test
+    public void readAndWriteSessionOverlaps() {
+        AnalysisSession initSession = new AnalysisSession();
+        String path = "tmp/overlapsTest.wtf";
+        double[] overlaps = {12.47, 52.68};
+
+        initSession.setOverlaps(overlaps);
+
+        FileSystem.writeFile(initSession, path);
+        AnalysisSession readSession = FileSystem.readFile(path).orElseThrow();
+
+        assertArrayEquals(initSession.getOverlaps(), readSession.getOverlaps());
+    }
 }

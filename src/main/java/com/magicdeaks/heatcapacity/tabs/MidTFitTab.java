@@ -65,6 +65,19 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
         updateChart();
     }
 
+    public void updateSession() {
+        if (session.getOrthoParams() != null) {
+            startPowerField.setText(String.valueOf(session.getOrthoParams()[0]));
+            incrField.setText(String.valueOf(session.getOrthoParams()[1]));
+        }
+
+        if (session.getMidTRange() != null) {
+            minTempField.setText(String.valueOf(session.getMidTRange()[0]));
+            maxTempField.setText(String.valueOf(session.getMidTRange()[1]));
+        }
+        if (session.getRawData() != null) executeFit();
+    }
+
     private void initComponents() {
         minTempField = new JTextField("5", 5);
         maxTempField = new JTextField("65", 5);

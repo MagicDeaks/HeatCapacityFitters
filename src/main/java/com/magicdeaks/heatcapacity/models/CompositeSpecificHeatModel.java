@@ -84,12 +84,18 @@ public class CompositeSpecificHeatModel implements ParametricModel, Serializable
 
     // --- Internal Logic for Mathematical Mapping ---
 
-    private abstract static class ModelTerm implements Serializable {
+    public abstract static class ModelTerm implements Serializable {
         private static final long serialVersionUID = 1L;
         protected final int paramOffset;
+        protected final SpecialFitModel model;
 
-        public ModelTerm(int paramOffset) {
+        public ModelTerm(SpecialFitModel model, int paramOffset) {
+            this.model = model;
             this.paramOffset = paramOffset;
+        }
+
+        public SpecialFitModel getModel() {
+            return model;
         }
 
         abstract int getParameterCount();
@@ -103,39 +109,39 @@ public class CompositeSpecificHeatModel implements ParametricModel, Serializable
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             ModelTerm model = (ModelTerm) o;
-            return paramOffset == model.paramOffset;
+            return this.model == model.model && paramOffset == model.paramOffset;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(paramOffset);
+            return Objects.hash(model, paramOffset);
         }
     }
 
     private ModelTerm createTerm(SpecialFitModel model, int offset) {
         return switch (model) {
-            case LINEAR -> new PolynomialTerm(offset, 1);
-            case LATTICE_3 -> new PolynomialTerm(offset, 3);
-            case LATTICE_5 -> new PolynomialTerm(offset, 5);
-            case LATTICE_7 -> new PolynomialTerm(offset, 7);
-            case LATTICE_9 -> new PolynomialTerm(offset, 9);
-            case LATTICE_11 -> new PolynomialTerm(offset, 11);
-            case LATTICE_13 -> new PolynomialTerm(offset, 13);
-            case UPTURN_2 -> new PolynomialTerm(offset, -2);
-            case UPTURN_3 -> new PolynomialTerm(offset, -3);
-            case UPTURN_4 -> new PolynomialTerm(offset, -4);
-            case GAP -> new GapTerm(offset);
-            case SCHOTTKY -> new SchottkyTerm(offset);
+            case LINEAR -> new PolynomialTerm(model, offset, 1);
+            case LATTICE_3 -> new PolynomialTerm(model, offset, 3);
+            case LATTICE_5 -> new PolynomialTerm(model, offset, 5);
+            case LATTICE_7 -> new PolynomialTerm(model, offset, 7);
+            case LATTICE_9 -> new PolynomialTerm(model, offset, 9);
+            case LATTICE_11 -> new PolynomialTerm(model, offset, 11);
+            case LATTICE_13 -> new PolynomialTerm(model, offset, 13);
+            case UPTURN_2 -> new PolynomialTerm(model, offset, -2);
+            case UPTURN_3 -> new PolynomialTerm(model, offset, -3);
+            case UPTURN_4 -> new PolynomialTerm(model, offset, -4);
+            case GAP -> new GapTerm(model, offset);
+            case SCHOTTKY -> new SchottkyTerm(model, offset);
             default -> throw new IllegalArgumentException("Unknown model: " + model);
         };
     }
 
     // 1-Parameter Polynomial: C = p * T^power
-    private static class PolynomialTerm extends ModelTerm {
+    public static class PolynomialTerm extends ModelTerm {
         private final double POWER;
 
-        public PolynomialTerm(int offset, double power) {
-            super(offset);
+        public PolynomialTerm(SpecialFitModel model, int offset, double power) {
+            super(model, offset);
             this.POWER = power;
         }
 
@@ -159,12 +165,14 @@ public class CompositeSpecificHeatModel implements ParametricModel, Serializable
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             PolynomialTerm poly = (PolynomialTerm) o;
-            return POWER == poly.POWER && paramOffset == poly.paramOffset;
+            return this.model == poly.model
+                    && POWER == poly.POWER
+                    && paramOffset == poly.paramOffset;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(POWER, paramOffset);
+            return Objects.hash(model, POWER, paramOffset);
         }
     }
 
@@ -172,9 +180,9 @@ public class CompositeSpecificHeatModel implements ParametricModel, Serializable
     // params[offset]   = B (Scaling factor)
     // params[offset+1] = n (Power of T)
     // params[offset+2] = delta (Energy Gap)
-    private static class GapTerm extends ModelTerm {
-        public GapTerm(int offset) {
-            super(offset);
+    public static class GapTerm extends ModelTerm {
+        public GapTerm(SpecialFitModel model, int offset) {
+            super(model, offset);
         }
 
         @Override
@@ -215,9 +223,9 @@ public class CompositeSpecificHeatModel implements ParametricModel, Serializable
     // params[offset]   = n (Scaling factor / Moles)
     // params[offset+1] = g (Degeneracy ratio)
     // params[offset+2] = theta (Energy splitting)
-    private static class SchottkyTerm extends ModelTerm {
-        public SchottkyTerm(int offset) {
-            super(offset);
+    public static class SchottkyTerm extends ModelTerm {
+        public SchottkyTerm(SpecialFitModel model, int offset) {
+            super(model, offset);
         }
 
         @Override

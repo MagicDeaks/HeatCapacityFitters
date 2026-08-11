@@ -55,6 +55,37 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
     private final java.util.List<CompositeSpecificHeatModel.SpecialFitModel> activeModelTerms =
             new ArrayList<>();
 
+    public void updateSession() {
+        if (session.getLowTRange() != null) {
+            minTempField.setText(String.valueOf(session.getLowTRange()[0]));
+            maxTempField.setText(String.valueOf(session.getLowTRange()[0]));
+        }
+
+        if (session.getLowTFit() != null) {
+            pctRMS = session.getLowTFit().pctRMS();
+            iterations = session.getLowTFit().iterations();
+        }
+
+        if (session.getLowTModel() != null) {
+            activeModelTerms.clear();
+            activeModelTerms.addAll(
+                    session.getLowTModel().getTerms().stream()
+                            .map(CompositeSpecificHeatModel.ModelTerm::getModel)
+                            .toList());
+
+            activeModelTerms.stream().forEach((model) -> addSelectedTerm(model));
+
+            double[] fittedCoeffs = session.getLowTFit().coefficients();
+            for (int i = 0; i < fittedCoeffs.length; i++) {
+                if (i < paramTableModel.getRowCount()) {
+                    paramTableModel.setValueAt(fittedCoeffs[i], i, 1);
+                }
+            }
+
+            updateChart();
+        }
+    }
+
     public LowTFitTab(AnalysisSession session) {
         this.session = session;
 
@@ -189,8 +220,12 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
             paramTable.getCellEditor().stopCellEditing();
         }
 
-        CompositeSpecificHeatModel.SpecialFitModel selectedModel =
-                (CompositeSpecificHeatModel.SpecialFitModel) termSelector.getSelectedItem();
+        SpecialFitModel selectedModel = (SpecialFitModel) termSelector.getSelectedItem();
+
+        addSelectedTerm(selectedModel);
+    }
+
+    private void addSelectedTerm(SpecialFitModel selectedModel) {
         if (selectedModel == null) return;
 
         switch (selectedModel) {
@@ -309,6 +344,9 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
 
         double minT = Double.parseDouble(minTempField.getText());
         double maxT = Double.parseDouble(maxTempField.getText());
+
+        session.setLowTRange(new double[] {minT, maxT});
+
         int maxIters = (int) iterSpinner.getValue();
         int maxCalcs = (int) calcSpinner.getValue();
 
