@@ -14,7 +14,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class DataImportTab extends JPanel {
-    private final AnalysisSession SESSION;
+    private AnalysisSession SESSION[];
 
     private JTextField filePathField;
     private JButton browseButton;
@@ -32,7 +32,7 @@ public class DataImportTab extends JPanel {
 
     private boolean subtractCopper = true;
 
-    public DataImportTab(AnalysisSession SESSION) {
+    public DataImportTab(AnalysisSession[] SESSION) {
         this.SESSION = SESSION;
         initializeUI();
     }
@@ -58,6 +58,8 @@ public class DataImportTab extends JPanel {
                     if (userSelection == JFileChooser.APPROVE_OPTION) {
                         selectedDataFile = fileChooser.getSelectedFile();
                         filePathField.setText(selectedDataFile.getAbsolutePath());
+                        System.out.println("Setting Path: " + selectedDataFile.getAbsolutePath());
+                        SESSION[0].setPath(selectedDataFile.getAbsolutePath());
                     }
                 });
 
@@ -144,6 +146,17 @@ public class DataImportTab extends JPanel {
         final boolean COPPER_SUB = subtractCopper;
         final double ATOMS = getDoubleFromField(atomsField, 0.0);
 
+        System.out.println("Setting Formula: " + FORMULA);
+        SESSION[0].setMolecularFormula(FORMULA);
+        System.out.println("Setting Sample Mass: " + SAMPLE_MASS);
+        SESSION[0].setSampleMass(SAMPLE_MASS);
+        System.out.println("Setting Copper Mass: " + COPPER_MASS);
+        SESSION[0].setCopperMass(COPPER_MASS);
+        System.out.println("Setting Copper Sub: " + COPPER_SUB);
+        SESSION[0].setCopperSub(COPPER_SUB);
+        System.out.println("Setting Atoms: " + ATOMS);
+        SESSION[0].setAtoms(ATOMS);
+
         SwingWorker<HeatCapacityData, Void> worker =
                 new SwingWorker<>() {
                     @Override
@@ -167,9 +180,10 @@ public class DataImportTab extends JPanel {
                         try {
                             HeatCapacityData finalData = get();
 
-                            SESSION.setRawData(finalData);
-                            SESSION.setAtoms(ATOMS);
-                            SESSION.setMolecularWeight(molecularWeight);
+                            System.out.println("Setting Raw Data");
+                            SESSION[0].setRawData(finalData);
+                            System.out.println("Setting Weight: " + molecularWeight);
+                            SESSION[0].setMolecularWeight(molecularWeight);
 
                             statusLabel.setText(
                                     "Status: Data loaded successfully! ("
@@ -193,23 +207,31 @@ public class DataImportTab extends JPanel {
     }
 
     public void updateSession() {
-        massField.setText(String.valueOf(SESSION.getSampleMass()));
-        copperMassField.setText(String.valueOf(SESSION.getCopperMass()));
-        copperCheckBox.setSelected(SESSION.getCopperSub());
-        subtractCopper = SESSION.getCopperSub();
 
-        molecularWeight = SESSION.getMolecularWeight();
-        atomsField.setText(String.valueOf(SESSION.getAtoms()));
+        System.out.println(SESSION[0].getSampleMass());
+        massField.setText(String.valueOf(SESSION[0].getSampleMass()));
+        System.out.println(SESSION[0].getCopperMass());
+        copperMassField.setText(String.valueOf(SESSION[0].getCopperMass()));
+        System.out.println(SESSION[0].getCopperSub());
+        copperCheckBox.setSelected(SESSION[0].getCopperSub());
+        subtractCopper = SESSION[0].getCopperSub();
 
-        if (SESSION.getPath() != null) {
-            filePathField.setText(SESSION.getPath());
+        System.out.println(SESSION[0].getMolecularWeight());
+        molecularWeight = SESSION[0].getMolecularWeight();
+        System.out.println(SESSION[0].getAtoms());
+        atomsField.setText(String.valueOf(SESSION[0].getAtoms()));
+
+        if (SESSION[0].getPath() != null) {
+            System.out.println(SESSION[0].getPath());
+            filePathField.setText(SESSION[0].getPath());
             selectedDataFile = new File(filePathField.getText());
         }
 
-        if (SESSION.getMolecularFormula() != null)
-            formulaField.setText(SESSION.getMolecularFormula());
+        if (SESSION[0].getMolecularFormula() != null) SESSION[0].getMolecularFormula();
+        formulaField.setText(SESSION[0].getMolecularFormula());
 
         statusLabel.setText("Status: Data loaded from file!");
+        System.out.println("01 SUCCESS");
     }
 
     private double getDoubleFromField(JTextField field, double defaultValue) {

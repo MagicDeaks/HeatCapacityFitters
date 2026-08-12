@@ -8,6 +8,8 @@ import com.magicdeaks.heatcapacity.records.ThermFunctions;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 public class AnalysisSession implements Serializable {
@@ -40,7 +42,12 @@ public class AnalysisSession implements Serializable {
 
     private ThermFunctions thermFunctions;
 
-    private final PropertyChangeSupport support = new PropertyChangeSupport(this);
+    private transient PropertyChangeSupport support = new PropertyChangeSupport(this);
+
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        this.support = new PropertyChangeSupport(this);
+    }
 
     public void removePropertyChangeListener(PropertyChangeListener listener) {
         support.removePropertyChangeListener(listener);
@@ -190,6 +197,7 @@ public class AnalysisSession implements Serializable {
     }
 
     public void setOverlaps(double[] overlaps) {
+        if (overlaps.length != 2) throw new IllegalArgumentException("Array is not size 2.");
         double[] oldOverlaps = this.overlaps;
         this.overlaps = overlaps;
 

@@ -3,6 +3,8 @@ package com.magicdeaks.heatcapacity.tabs;
 import static com.magicdeaks.heatcapacity.util.Deviations.getDeviations;
 
 import com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel;
+import com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel.HighTFitModel;
+import com.magicdeaks.heatcapacity.models.HighTSpecificHeatModel.ModelTerm;
 import com.magicdeaks.heatcapacity.models.ParameterTableModel;
 import com.magicdeaks.heatcapacity.records.FitResult;
 import com.magicdeaks.heatcapacity.records.HeatCapacityData;
@@ -31,7 +33,7 @@ import java.util.stream.IntStream;
 import javax.swing.*;
 
 public class HighTFitTab extends JPanel implements PropertyChangeListener {
-    private final AnalysisSession session;
+    private AnalysisSession[] session;
 
     private JTextField minTempField, maxTempField;
     private JSpinner iterSpinner, calcSpinner;
@@ -54,15 +56,46 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
     private final java.util.List<HighTSpecificHeatModel.HighTFitModel> activeModelTerms =
             new ArrayList<>();
 
-    public HighTFitTab(AnalysisSession session) {
+    public HighTFitTab(AnalysisSession[] session) {
         this.session = session;
 
-        this.session.addPropertyChangeListener(this);
+        this.session[0].addPropertyChangeListener(this);
 
         initComponents();
         buildLayout();
 
         updateChart();
+    }
+
+    public void updateSession() {
+        if (session[0].getHighTRange() != null) {
+            minTempField.setText(String.valueOf(session[0].getHighTRange()[0]));
+            maxTempField.setText(String.valueOf(session[0].getHighTRange()[1]));
+        }
+
+        if (session[0].getHighTFit() != null) {
+            pctRMS = session[0].getHighTFit().pctRMS();
+            iterations = session[0].getHighTFit().iterations();
+        }
+
+        if (session[0].getHighTModel() != null && session[0].getHighTModel().getTerms() != null) {
+            activeModelTerms.clear();
+
+            session[0].getHighTModel().getTerms().stream()
+                    .map(ModelTerm::getModel)
+                    .forEach((model) -> addSelectedTerm(model));
+
+            double[] fittedCoeffs = session[0].getHighTFit().coefficients();
+            for (int i = 0; i < fittedCoeffs.length; i++) {
+                if (i < paramTableModel.getRowCount()) {
+                    paramTableModel.setValueAt(fittedCoeffs[i], i, 1);
+                }
+            }
+
+            updateChart();
+        }
+
+        session[0].addPropertyChangeListener(this);
     }
 
     private void initComponents() {
@@ -189,10 +222,13 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
             paramTable.getCellEditor().stopCellEditing();
         }
 
-        HighTSpecificHeatModel.HighTFitModel selectedModel =
-                (HighTSpecificHeatModel.HighTFitModel) termSelector.getSelectedItem();
+        HighTFitModel selectedModel = (HighTFitModel) termSelector.getSelectedItem();
         if (selectedModel == null) return;
 
+        addSelectedTerm(selectedModel);
+    }
+
+    private void addSelectedTerm(HighTFitModel selectedModel) {
         switch (selectedModel) {
             case LINEAR:
                 paramTableModel.addParameter("Linear", 0.001, 0.0, 100.0, false);
@@ -202,19 +238,19 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
                 break;
             case DEBYE:
                 paramTableModel.addParameter(
-                        "m", session.getAtoms() / 3, 0.0, session.getAtoms(), false);
+                        "m", session[0].getAtoms() / 3, 0.0, session[0].getAtoms(), false);
                 paramTableModel.addParameter("θ_D", 150, 0.0, 1000.0, false);
 
                 break;
             case EINSTEIN:
                 if (activeModelTerms.contains(selectedModel)) {
                     paramTableModel.addParameter(
-                            "n", session.getAtoms() / 3, 0.0, session.getAtoms(), false);
+                            "n", session[0].getAtoms() / 3, 0.0, session[0].getAtoms(), false);
                     paramTableModel.addParameter("θ_E", 1000, 0.0, 4000.0, false);
                     break;
                 }
                 paramTableModel.addParameter(
-                        "n", session.getAtoms() / 3, 0.0, session.getAtoms(), false);
+                        "n", session[0].getAtoms() / 3, 0.0, session[0].getAtoms(), false);
                 paramTableModel.addParameter("θ_E", 300, 0.0, 4000.0, false);
 
                 break;
@@ -266,7 +302,7 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
                                 activeModelTerms.toArray(
                                         new HighTSpecificHeatModel.HighTFitModel[0]);
                         HighTSpecificHeatModel highTModel = new HighTSpecificHeatModel(modelArray);
-                        session.setHighTModel(highTModel);
+                        session[0].setHighTModel(highTModel);
 
                         double[] initialParams = paramTableModel.getColumnDataAsDouble(1);
                         double[] lowerBounds = paramTableModel.getColumnDataAsDouble(2);
@@ -278,7 +314,7 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
                                     "Table rows do not match model parameter count.");
                         }
 
-                        HeatCapacityData highTData = getHighTData(session, minT, maxT);
+                        HeatCapacityData highTData = getHighTData(session[0], minT, maxT);
 
                         return LmCurveFitter.fit(
                                 highTModel,
@@ -296,7 +332,7 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
                         try {
                             FitResult results = get();
 
-                            session.setHighTFit(results);
+                            session[0].setHighTFit(results);
                             statusLabel.setText("Data fitted successfully!");
 
                             double[] fittedCoeffs = results.coefficients();
@@ -329,7 +365,7 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
         double maxT = Double.parseDouble(maxTempField.getText());
 
         HeatCapacityData rawData =
-                (session.getRawData() != null) ? getHighTData(session, minT, maxT) : null;
+                (session[0].getRawData() != null) ? getHighTData(session[0], minT, maxT) : null;
         if (rawData != null) {
             if (rawData.temperatures() != null) {
                 double[][] rawDataArrays =
@@ -340,7 +376,7 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
             }
         }
 
-        FitResult fitResult = session.getHighTFit();
+        FitResult fitResult = session[0].getHighTFit();
         if (fitResult != null && !activeModelTerms.isEmpty()) {
             try {
                 pctRMS = fitResult.pctRMS();
@@ -372,7 +408,7 @@ public class HighTFitTab extends JPanel implements PropertyChangeListener {
 
                         deviations.addSeries("Deviations", deviationsSet);
 
-                        session.setHighTFit(
+                        session[0].setHighTFit(
                                 new FitResult(
                                         fitResult.coefficients(),
                                         fitResult.pctRMS(),

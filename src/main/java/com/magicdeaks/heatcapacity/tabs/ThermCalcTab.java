@@ -19,7 +19,7 @@ import java.util.Arrays;
 import javax.swing.*;
 
 public class ThermCalcTab extends JPanel implements PropertyChangeListener {
-    private final AnalysisSession session;
+    private AnalysisSession[] session;
 
     private JPanel leftPanel;
     private JPanel centrePanel;
@@ -58,12 +58,25 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         290, 298.15, 300
     };
 
-    public ThermCalcTab(AnalysisSession session) {
+    public ThermCalcTab(AnalysisSession[] session) {
         this.session = session;
 
-        this.session.addPropertyChangeListener(this);
+        this.session[0].addPropertyChangeListener(this);
 
         initComponents();
+    }
+
+    public void updateSession() {
+        if (session[0].getOverlaps() != null) {
+            lowField.setText(String.valueOf(session[0].getOverlaps()[0]));
+            highField.setText(String.valueOf(session[0].getOverlaps()[1]));
+        }
+
+        if (session[0].getThermFunctions() != null) {
+            updateFunctions();
+        }
+
+        session[0].addPropertyChangeListener(this);
     }
 
     private void initComponents() {
@@ -112,6 +125,7 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
                     try {
                         lowOverlapT = Double.parseDouble(lowField.getText());
                         highOverlapT = Double.parseDouble(highField.getText());
+                        session[0].setOverlaps(new double[] {lowOverlapT, highOverlapT});
                         calculateFunctions();
                         updateFunctions();
                     } catch (Exception e) {
@@ -189,13 +203,13 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         double[][] lowMid = new double[4][];
         double[][] midHigh = new double[4][];
 
-        int midSelect = session.getMidTSelect();
+        int midSelect = session[0].getMidTSelect();
 
         double[] temps = new double[points];
 
-        CompositeSpecificHeatModel lowModel = session.getLowTModel();
+        CompositeSpecificHeatModel lowModel = session[0].getLowTModel();
 
-        HighTSpecificHeatModel highModel = session.getHighTModel();
+        HighTSpecificHeatModel highModel = session[0].getHighTModel();
 
         double min = 5;
         double max = 300.02;
@@ -209,11 +223,11 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         lowMid[0] = temps.clone();
         midHigh[0] = temps.clone();
 
-        double[] lowHC = lowModel.value(temps, session.getLowTFit().coefficients());
-        double[] highHC = highModel.value(temps, session.getHighTFit().coefficients());
+        double[] lowHC = lowModel.value(temps, session[0].getLowTFit().coefficients());
+        double[] highHC = highModel.value(temps, session[0].getHighTFit().coefficients());
 
-        int[] midModel = session.getMidTModel()[midSelect];
-        double[] midCoeffs = session.getMidTFit()[midSelect].coefficients();
+        int[] midModel = session[0].getMidTModel()[midSelect];
+        double[] midCoeffs = session[0].getMidTFit()[midSelect].coefficients();
 
         double[][] pairs = new double[midModel.length][];
 
@@ -317,12 +331,14 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         double[] highTemps = ThermCalc.getTRange(resultTemps, highOverlapT, 310);
 
         double[] lowHC =
-                session.getLowTModel().value(lowTemps, session.getLowTFit().coefficients());
+                session[0].getLowTModel().value(lowTemps, session[0].getLowTFit().coefficients());
         double[] highHC =
-                session.getHighTModel().value(highTemps, session.getHighTFit().coefficients());
+                session[0]
+                        .getHighTModel()
+                        .value(highTemps, session[0].getHighTFit().coefficients());
 
-        int[] midModel = session.getMidTModel()[session.getMidTSelect()];
-        double[] midCoeffs = session.getMidTFit()[session.getMidTSelect()].coefficients();
+        int[] midModel = session[0].getMidTModel()[session[0].getMidTSelect()];
+        double[] midCoeffs = session[0].getMidTFit()[session[0].getMidTSelect()].coefficients();
 
         double[][] pairs = new double[midModel.length][];
 
@@ -345,7 +361,8 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
         System.arraycopy(highHC, 0, finalHC, lowHC.length + midHC.length, highHC.length);
 
         double[] integralHC =
-                ThermCalc.calculateHeatCapacity(session, lowOverlapT, highOverlapT, 0, 310, 0.01);
+                ThermCalc.calculateHeatCapacity(
+                        session[0], lowOverlapT, highOverlapT, 0, 310, 0.01);
         double[] integralTemps = ThermCalc.calculateTemperatures(0, 310, 0.01);
 
         double[] integralEnthalpies = ThermCalc.calculateEnthalpies(integralTemps, integralHC);
@@ -369,13 +386,13 @@ public class ThermCalcTab extends JPanel implements PropertyChangeListener {
             finalGibbs[i] = integralGibbs[findIdx(resultTemps[i], integralTemps)];
         }
 
-        session.setThermFunctions(
+        session[0].setThermFunctions(
                 new ThermFunctions(
                         resultTemps, finalHC, finalEnthalpies, finalEntropies, finalGibbs));
     }
 
     private void updateFunctions() {
-        ThermFunctions func = session.getThermFunctions();
+        ThermFunctions func = session[0].getThermFunctions();
 
         thermFuncTableModel.clearAll();
 

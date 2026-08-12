@@ -31,7 +31,7 @@ import java.util.stream.IntStream;
 import javax.swing.*;
 
 public class MidTFitTab extends JPanel implements PropertyChangeListener {
-    private final AnalysisSession session;
+    private AnalysisSession[] session;
 
     private JTextField minTempField, maxTempField;
     private JButton fitButton;
@@ -54,10 +54,10 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
 
     private JComboBox<String> fitSelector;
 
-    public MidTFitTab(AnalysisSession session) {
+    public MidTFitTab(AnalysisSession[] session) {
         this.session = session;
 
-        this.session.addPropertyChangeListener(this);
+        this.session[0].addPropertyChangeListener(this);
 
         initComponents();
         buildLayout();
@@ -66,16 +66,20 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
     }
 
     public void updateSession() {
-        if (session.getOrthoParams() != null) {
-            startPowerField.setText(String.valueOf(session.getOrthoParams()[0]));
-            incrField.setText(String.valueOf(session.getOrthoParams()[1]));
+        if (session[0].getOrthoParams() != null) {
+            startPowerField.setText(String.valueOf(session[0].getOrthoParams()[0]));
+            incrField.setText(String.valueOf(session[0].getOrthoParams()[1]));
         }
 
-        if (session.getMidTRange() != null) {
-            minTempField.setText(String.valueOf(session.getMidTRange()[0]));
-            maxTempField.setText(String.valueOf(session.getMidTRange()[1]));
+        if (session[0].getMidTRange() != null) {
+            minTempField.setText(String.valueOf(session[0].getMidTRange()[0]));
+            maxTempField.setText(String.valueOf(session[0].getMidTRange()[1]));
         }
-        if (session.getRawData() != null) executeFit();
+        if (session[0].getRawData() != null) executeFit();
+
+        fitSelector.setSelectedIndex(session[0].getMidTSelect());
+
+        session[0].addPropertyChangeListener(this);
     }
 
     private void initComponents() {
@@ -97,7 +101,7 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
         fitSelector.addActionListener(
                 _ -> {
                     updateChart();
-                    session.setMidTSelect(fitSelector.getSelectedIndex());
+                    session[0].setMidTSelect(fitSelector.getSelectedIndex());
                     System.out.println(fitSelector.getSelectedIndex());
                 });
 
@@ -211,7 +215,7 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
                         int startPower = Integer.parseInt(startPowerField.getText());
                         int incr = Integer.parseInt(incrField.getText());
 
-                        HeatCapacityData data = getMidTData(session, minT, maxT);
+                        HeatCapacityData data = getMidTData(session[0], minT, maxT);
 
                         for (int i = 0; i < NUM_FITS; i++) {
                             results[i] = fitOrthogonalPolynomial(data, startPower, incr, i + 1);
@@ -223,7 +227,7 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
                         }
 
                         System.out.println(Arrays.deepToString(powers));
-                        session.setMidTModel(powers);
+                        session[0].setMidTModel(powers);
                         return results;
                     }
 
@@ -232,7 +236,7 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
                         try {
                             FitResult[] results = get();
 
-                            session.setMidTFit(results);
+                            session[0].setMidTFit(results);
                             statusLabel.setText("Data fitted successfully!");
 
                             double[][] fittedCoeffs = new double[results.length][];
@@ -281,7 +285,7 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
         DefaultXYDataset currentDeviations = new DefaultXYDataset();
 
         HeatCapacityData rawData =
-                (session.getRawData() != null) ? getMidTData(session, minT, maxT) : null;
+                (session[0].getRawData() != null) ? getMidTData(session[0], minT, maxT) : null;
 
         if (rawData != null) {
             if (rawData.temperatures() != null) {
@@ -293,7 +297,7 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
             }
         }
 
-        FitResult[] fitResults = session.getMidTFit();
+        FitResult[] fitResults = session[0].getMidTFit();
         if (fitResults != null) {
             if (Arrays.stream(fitResults).noneMatch(Objects::isNull)) {
                 int selectedIdx = fitSelector.getSelectedIndex();
@@ -354,7 +358,7 @@ public class MidTFitTab extends JPanel implements PropertyChangeListener {
                                                                     fitResults[i].coefficients(),
                                                                     rawData)));
 
-                                    session.setMidTFit(updatedFits);
+                                    session[0].setMidTFit(updatedFits);
                                 }
                             }
                         }

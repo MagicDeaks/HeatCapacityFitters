@@ -19,7 +19,7 @@ public class MainFrame {
     private JFrame frame;
     private JPanel cardPanel;
     private CardLayout cardLayout;
-    private AnalysisSession SESSION;
+    private AnalysisSession[] SESSION;
 
     private String savePath;
 
@@ -37,7 +37,7 @@ public class MainFrame {
     private ThermCalcTab thermCalcTab;
 
     public MainFrame() {
-        SESSION = new AnalysisSession();
+        SESSION = new AnalysisSession[] {new AnalysisSession()};
         initialize();
     }
 
@@ -91,7 +91,7 @@ public class MainFrame {
         saveItem.addActionListener(
                 _ -> {
                     if (savePath != null) {
-                        FileSystem.writeFile(SESSION, savePath);
+                        FileSystem.writeFile(SESSION[0], savePath);
                     } else {
                         saveAs();
                     }
@@ -130,8 +130,10 @@ public class MainFrame {
                 filePath = filePath + ".wtf";
             }
 
-            FileSystem.writeFile(SESSION, filePath);
+            FileSystem.writeFile(SESSION[0], filePath);
             savePath = filePath;
+
+            System.out.println("File saved to: " + filePath);
         } else if (userSelection == JFileChooser.CANCEL_OPTION) {
             System.out.println("Save cancelled by user.");
         }
@@ -144,7 +146,7 @@ public class MainFrame {
         FileNameExtensionFilter filter = new FileNameExtensionFilter("WTF File (*.wtf)", "wtf");
         fileChooser.setFileFilter(filter);
 
-        fileChooser.setCurrentDirectory(new File(System.getProperty("wser.dir")));
+        fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
         int userSelection = fileChooser.showOpenDialog(null);
 
         if (userSelection == JFileChooser.APPROVE_OPTION) {
@@ -156,7 +158,7 @@ public class MainFrame {
                 return;
             }
 
-            FileSystem.readFile(filePath);
+            SESSION[0] = FileSystem.readFile(filePath).orElseThrow();
             savePath = filePath;
 
             update();
@@ -166,11 +168,17 @@ public class MainFrame {
     }
 
     private void update() {
+        System.out.println("Loading...");
         dataImportTab.updateSession();
+        System.out.println("Loaded DataImportTab");
         lowTFitTab.updateSession();
+        System.out.println("Loaded LowTFitTab");
         midTFitTab.updateSession();
-        // highTFitTab.updateSession();
-        // thermCalcTab.updateSession();
+        System.out.println("Loaded MidTFitTab");
+        highTFitTab.updateSession();
+        System.out.println("Loaded HighTFitTab");
+        thermCalcTab.updateSession();
+        System.out.println("Loaded ThermCalcTab");
     }
 
     private void addView(Component component, String identifier, JMenu menu) {
@@ -187,9 +195,9 @@ public class MainFrame {
         frame.setVisible(true);
     }
 
-    private final Color colour1 = new Color(0, 0, 0);
-    private final Color colour2 = new Color(20, 33, 61);
-    private final Color colour3 = new Color(252, 163, 17);
-    private final Color colour4 = new Color(229, 229, 229);
-    private final Color colour5 = new Color(255, 255, 255);
+    public static final Color COLOUR_1 = new Color(0, 0, 0);
+    public static final Color COLOUR_2 = new Color(20, 33, 61);
+    public static final Color COLOUR_3 = new Color(252, 163, 17);
+    public static final Color COLOUR_4 = new Color(229, 229, 229);
+    public static final Color COLOUR_5 = new Color(255, 255, 255);
 }

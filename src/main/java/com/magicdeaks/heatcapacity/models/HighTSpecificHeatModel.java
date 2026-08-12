@@ -20,7 +20,7 @@ public class HighTSpecificHeatModel implements ParametricModel, Serializable {
         EINSTEIN
     }
 
-    public enum StandardModels {
+    public static enum StandardModels {
         D_E_L_S(DEBYE, EINSTEIN, LINEAR, SQUARE),
         D_E_L(DEBYE, EINSTEIN, LINEAR),
         D_E_S(DEBYE, EINSTEIN, SQUARE),
@@ -94,12 +94,18 @@ public class HighTSpecificHeatModel implements ParametricModel, Serializable {
         return jacobianMatrix;
     }
 
-    private abstract static class ModelTerm implements Serializable {
+    public abstract static class ModelTerm implements Serializable {
         private static final long serialVersionUID = 1L;
+        protected final HighTFitModel model;
         protected final int paramOffset;
 
-        public ModelTerm(int paramOffset) {
+        public ModelTerm(HighTFitModel model, int paramOffset) {
+            this.model = model;
             this.paramOffset = paramOffset;
+        }
+
+        public HighTFitModel getModel() {
+            return model;
         }
 
         abstract int getParameterCount();
@@ -113,30 +119,30 @@ public class HighTSpecificHeatModel implements ParametricModel, Serializable {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             ModelTerm model = (ModelTerm) o;
-            return paramOffset == model.paramOffset;
+            return this.model == model.model && paramOffset == model.paramOffset;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(paramOffset);
+            return Objects.hash(model, paramOffset);
         }
     }
 
     private ModelTerm createTerm(HighTFitModel model, int offset) {
         return switch (model) {
-            case LINEAR -> new PolynomialTerm(offset, 1);
-            case SQUARE -> new PolynomialTerm(offset, 2);
-            case DEBYE -> new DebyeTerm(offset);
-            case EINSTEIN -> new EinsteinTerm(offset);
+            case LINEAR -> new PolynomialTerm(model, offset, 1);
+            case SQUARE -> new PolynomialTerm(model, offset, 2);
+            case DEBYE -> new DebyeTerm(model, offset);
+            case EINSTEIN -> new EinsteinTerm(model, offset);
             default -> throw new IllegalArgumentException("Unknown Model: " + model);
         };
     }
 
-    private static class PolynomialTerm extends ModelTerm {
+    public static class PolynomialTerm extends ModelTerm {
         private final double POWER;
 
-        public PolynomialTerm(int offset, double power) {
-            super(offset);
+        public PolynomialTerm(HighTFitModel model, int offset, double power) {
+            super(model, offset);
             this.POWER = power;
         }
 
@@ -160,18 +166,20 @@ public class HighTSpecificHeatModel implements ParametricModel, Serializable {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             PolynomialTerm poly = (PolynomialTerm) o;
-            return POWER == poly.POWER && paramOffset == poly.paramOffset;
+            return this.model == poly.model
+                    && POWER == poly.POWER
+                    && paramOffset == poly.paramOffset;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(POWER, paramOffset);
+            return Objects.hash(model, POWER, paramOffset);
         }
     }
 
-    private static class DebyeTerm extends ModelTerm {
-        public DebyeTerm(int offset) {
-            super(offset);
+    public static class DebyeTerm extends ModelTerm {
+        public DebyeTerm(HighTFitModel model, int offset) {
+            super(model, offset);
         }
 
         @Override
@@ -207,18 +215,18 @@ public class HighTSpecificHeatModel implements ParametricModel, Serializable {
             if (this == o) return true;
             if (o == null || this.getClass() != o.getClass()) return false;
             DebyeTerm deb = (DebyeTerm) o;
-            return this.paramOffset == deb.paramOffset;
+            return this.model == deb.model && this.paramOffset == deb.paramOffset;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(paramOffset);
+            return Objects.hash(model, paramOffset);
         }
     }
 
-    private static class EinsteinTerm extends ModelTerm {
-        public EinsteinTerm(int offset) {
-            super(offset);
+    public static class EinsteinTerm extends ModelTerm {
+        public EinsteinTerm(HighTFitModel model, int offset) {
+            super(model, offset);
         }
 
         @Override
@@ -252,12 +260,12 @@ public class HighTSpecificHeatModel implements ParametricModel, Serializable {
             if (this == o) return true;
             if (o == null || this.getClass() != o.getClass()) return false;
             EinsteinTerm ein = (EinsteinTerm) o;
-            return this.paramOffset == ein.paramOffset;
+            return this.model == ein.model && this.paramOffset == ein.paramOffset;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(paramOffset);
+            return Objects.hash(model, paramOffset);
         }
     }
 }

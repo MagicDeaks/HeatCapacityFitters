@@ -32,7 +32,7 @@ import java.util.stream.IntStream;
 import javax.swing.*;
 
 public class LowTFitTab extends JPanel implements PropertyChangeListener {
-    private final AnalysisSession session;
+    private AnalysisSession[] session;
 
     private JTextField minTempField, maxTempField;
     private JSpinner iterSpinner, calcSpinner;
@@ -56,26 +56,24 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
             new ArrayList<>();
 
     public void updateSession() {
-        if (session.getLowTRange() != null) {
-            minTempField.setText(String.valueOf(session.getLowTRange()[0]));
-            maxTempField.setText(String.valueOf(session.getLowTRange()[0]));
+        if (session[0].getLowTRange() != null) {
+            minTempField.setText(String.valueOf(session[0].getLowTRange()[0]));
+            maxTempField.setText(String.valueOf(session[0].getLowTRange()[1]));
         }
 
-        if (session.getLowTFit() != null) {
-            pctRMS = session.getLowTFit().pctRMS();
-            iterations = session.getLowTFit().iterations();
+        if (session[0].getLowTFit() != null) {
+            pctRMS = session[0].getLowTFit().pctRMS();
+            iterations = session[0].getLowTFit().iterations();
         }
 
-        if (session.getLowTModel() != null) {
+        if (session[0].getLowTModel() != null && session[0].getLowTModel().getTerms() != null) {
             activeModelTerms.clear();
-            activeModelTerms.addAll(
-                    session.getLowTModel().getTerms().stream()
-                            .map(CompositeSpecificHeatModel.ModelTerm::getModel)
-                            .toList());
 
-            activeModelTerms.stream().forEach((model) -> addSelectedTerm(model));
+            session[0].getLowTModel().getTerms().stream()
+                    .map(CompositeSpecificHeatModel.ModelTerm::getModel)
+                    .forEach((model) -> addSingleSelectedTerm(model));
 
-            double[] fittedCoeffs = session.getLowTFit().coefficients();
+            double[] fittedCoeffs = session[0].getLowTFit().coefficients();
             for (int i = 0; i < fittedCoeffs.length; i++) {
                 if (i < paramTableModel.getRowCount()) {
                     paramTableModel.setValueAt(fittedCoeffs[i], i, 1);
@@ -84,12 +82,14 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
 
             updateChart();
         }
+
+        session[0].addPropertyChangeListener(this);
     }
 
-    public LowTFitTab(AnalysisSession session) {
+    public LowTFitTab(AnalysisSession[] session) {
         this.session = session;
 
-        this.session.addPropertyChangeListener(this);
+        this.session[0].addPropertyChangeListener(this);
 
         initComponents();
         buildLayout();
@@ -319,6 +319,70 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
         }
     }
 
+    private void addSingleSelectedTerm(SpecialFitModel selectedModel) {
+        if (selectedModel == null) return;
+
+        switch (selectedModel) {
+            case LINEAR:
+                activeModelTerms.add(SpecialFitModel.LINEAR);
+                paramTableModel.addParameter("Linear (γ)", 0.001, 0.0, 1.0, false);
+                break;
+            case LATTICE_3:
+                activeModelTerms.add(SpecialFitModel.LATTICE_3);
+                paramTableModel.addParameter("Lattice T^3 (β_3)", 0.0001, 0.0, 1.0, false);
+                break;
+            case LATTICE_5:
+                activeModelTerms.add(SpecialFitModel.LATTICE_5);
+                paramTableModel.addParameter("Lattice T^5 (β_5)", -5e-6, -1.0, 1.0, false);
+                break;
+            case LATTICE_7:
+                activeModelTerms.add(SpecialFitModel.LATTICE_7);
+                paramTableModel.addParameter("Lattice T^7 (β_7)", 1e-8, -1.0, 1.0, false);
+                break;
+            case LATTICE_9:
+                activeModelTerms.add(SpecialFitModel.LATTICE_9);
+                paramTableModel.addParameter("Lattice T^9 (β_9)", -1e-10, -1.0, 1.0, false);
+                break;
+            case LATTICE_11:
+                activeModelTerms.add(SpecialFitModel.LATTICE_11);
+                paramTableModel.addParameter("Lattice T^11 (β_11)", 1e-12, -1.0, 1.0, false);
+                break;
+            case LATTICE_13:
+                activeModelTerms.add(SpecialFitModel.LATTICE_13);
+                paramTableModel.addParameter("Lattice T^13 (β_13)", -1e-14, -1.0, 1.0, false);
+                break;
+            case GAP:
+                activeModelTerms.add(SpecialFitModel.GAP);
+                paramTableModel.addParameter("Gap: Scale (B)", 1.0, 0.0, 100.0, false);
+                paramTableModel.addParameter("Gap: Power (n)", 3.0, -5.0, 5.0, true); // Often fixed
+                paramTableModel.addParameter("Gap: Energy (Δ)", 10.0, 0.0, 100.0, false);
+                break;
+            case SCHOTTKY:
+                activeModelTerms.add(SpecialFitModel.SCHOTTKY);
+                paramTableModel.addParameter("Schottky: Moles (n)", 1.0, 0.0, 10.0, false);
+                paramTableModel.addParameter("Schottky: Degeneracy (g)", 1.0, 0.0, 10.0, true);
+                paramTableModel.addParameter("Schottky: Splitting (θ)", 5.0, 0.0, 50.0, false);
+                break;
+            case UPTURN_2:
+                activeModelTerms.add(SpecialFitModel.UPTURN_2);
+                paramTableModel.addParameter("Lattice T^-2 (β_-2)", 0.001, 0.0, 100.0, false);
+                break;
+            case UPTURN_3:
+                activeModelTerms.add(SpecialFitModel.UPTURN_3);
+                paramTableModel.addParameter("Lattice T^-3 (β_-3)", -0.001, -100.0, 0.0, false);
+                break;
+            case UPTURN_4:
+                activeModelTerms.add(SpecialFitModel.UPTURN_4);
+                paramTableModel.addParameter("Lattice T^-4 (β_-4)", 0.001, 0.0, 100.0, false);
+                break;
+            default:
+                activeModelTerms.add(selectedModel);
+                paramTableModel.addParameter(
+                        selectedModel.name() + " Coeff", 1.0, -10.0, 10.0, false);
+                break;
+        }
+    }
+
     private void clearModel() {
         if (paramTable.isEditing()) {
             paramTable.getCellEditor().stopCellEditing();
@@ -345,7 +409,7 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
         double minT = Double.parseDouble(minTempField.getText());
         double maxT = Double.parseDouble(maxTempField.getText());
 
-        session.setLowTRange(new double[] {minT, maxT});
+        session[0].setLowTRange(new double[] {minT, maxT});
 
         int maxIters = (int) iterSpinner.getValue();
         int maxCalcs = (int) calcSpinner.getValue();
@@ -362,7 +426,7 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
                                         new CompositeSpecificHeatModel.SpecialFitModel[0]);
                         CompositeSpecificHeatModel lowTModel =
                                 new CompositeSpecificHeatModel(modelArray);
-                        session.setLowTModel(lowTModel);
+                        session[0].setLowTModel(lowTModel);
 
                         double[] initialParams = paramTableModel.getColumnDataAsDouble(1);
                         double[] lowerBounds = paramTableModel.getColumnDataAsDouble(2);
@@ -374,7 +438,7 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
                                     "Table rows do not match model parameter count.");
                         }
 
-                        HeatCapacityData lowTData = getLowTData(session, minT, maxT);
+                        HeatCapacityData lowTData = getLowTData(session[0], minT, maxT);
 
                         return LmCurveFitter.fit(
                                 lowTModel,
@@ -392,7 +456,7 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
                         try {
                             FitResult results = get();
 
-                            session.setLowTFit(results);
+                            session[0].setLowTFit(results);
                             statusLabel.setText("Data fitted successfully!");
 
                             double[] fittedCoeffs = results.coefficients();
@@ -425,7 +489,7 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
         double maxT = Double.parseDouble(maxTempField.getText());
 
         HeatCapacityData rawData =
-                (session.getRawData() != null) ? getLowTData(session, minT, maxT) : null;
+                (session[0].getRawData() != null) ? getLowTData(session[0], minT, maxT) : null;
         if (rawData != null) {
             if (rawData.temperatures() != null) {
                 double[][] rawDataArrays =
@@ -436,7 +500,7 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
             }
         }
 
-        FitResult fitResult = session.getLowTFit();
+        FitResult fitResult = session[0].getLowTFit();
         if (fitResult != null && !activeModelTerms.isEmpty()) {
             try {
                 pctRMS = fitResult.pctRMS();
@@ -467,7 +531,7 @@ public class LowTFitTab extends JPanel implements PropertyChangeListener {
                                 getDeviations(lowTModel, fitResult.coefficients(), rawData);
 
                         deviations.addSeries("Deviations", deviationsSet);
-                        session.setLowTFit(
+                        session[0].setLowTFit(
                                 new FitResult(
                                         fitResult.coefficients(),
                                         fitResult.pctRMS(),
